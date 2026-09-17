@@ -7,12 +7,16 @@
 
 ## 🎯 DESAFIO 
 
-Em desenvolvimento... 🚧
+Analisar os dados públicos de verificações e fiscalizações do IPEM-SP (Instituto de Pesos e Medidas do Estado de São Paulo) relacionados exclusivamente a Bombas Medidoras de Combustível, utilizando informações do Portal de Serviços do Inmetro nos Estados (PSIE) e do Portal de Dados Abertos do IPEM-SP. O desafio envolve tratar, limpar e normalizar bases de dados heterogêneas (geográfica e temporalmente), além de identificar padrões de conformidade e não conformidade nas medições, tornando essas informações acessíveis e compreensíveis para a sociedade.
 
 
 ## 📌 OBJETIVO 
 
-Em desenvolvimento... 🚧
+Desenvolver um pipeline documentado em Python e uma aplicação web interativa (dashboard) que permitam consultar rapidamente a conformidade das bombas de combustível fiscalizadas pelo IPEM-SP. O projeto contempla três etapas principais:
+
+- Limpeza e Normalização de Dados (Google Colab) — tratamento da base de bombas de combustível, padronização geográfica e temporal, e sanitização de colunas de medição (erros em mL, status de aprovação/reprovação/interdição); <br>
+- Análise Exploratória (Google Colab) — identificação de taxas regionais de conformidade, principais motivos de reprovação e ranking de municípios/regiões auditadas;
+- Aplicação Web — construção de um dashboard com filtros por município/região, cards de KPI (Total de Bombas Periciadas, % de Aprovação, Total de Autuações) e gráficos interativos.
 
 ---
 
