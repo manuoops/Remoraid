@@ -3,6 +3,8 @@ import Papa from 'papaparse';
 import {
   AlertTriangle,
   ArrowDownWideNarrow,
+  ArrowDown,
+  ArrowUp,
   ArrowUpWideNarrow,
   Ban,
   ChartNoAxesColumnIncreasing,
@@ -13,8 +15,10 @@ import {
   Fuel,
   MapPin,
   Search,
+  SlidersHorizontal,
   ShieldCheck,
   TriangleAlert,
+  X,
 } from 'lucide-react';
 import {
   Bar,
@@ -49,6 +53,21 @@ interface BombaData {
 type Status = 'Aprovado' | 'Reprovado' | 'Interditado' | 'Sem classificação';
 type DistributionChart = 'pie' | 'bar';
 type RegionChart = 'rates' | 'results' | 'municipalities';
+type RankingSortKey = 'municipio' | 'total' | 'aprovacao' | 'reprovacao' | 'interdicao';
+type SortDirection = 'asc' | 'desc';
+
+interface RankingSort {
+  key: RankingSortKey;
+  direction: SortDirection;
+}
+
+const rankingSortOptions: { key: RankingSortKey; label: string }[] = [
+  { key: 'municipio', label: 'Município' },
+  { key: 'total', label: 'Bombas' },
+  { key: 'aprovacao', label: 'Aprovação' },
+  { key: 'reprovacao', label: 'Reprovação' },
+  { key: 'interdicao', label: 'Interdição' },
+];
 
 const municipiosValeParaiba = [
   'Caçapava', 'Igaratá', 'Jacareí', 'Paraibuna', 'Santa Branca', 'São José dos Campos',
@@ -90,7 +109,9 @@ export default function App() {
   const [loadError, setLoadError] = useState('');
   const [municipioFiltro, setMunicipioFiltro] = useState('');
   const [anoFiltro, setAnoFiltro] = useState('Todos');
-  const [ordemRanking, setOrdemRanking] = useState<'desc' | 'asc'>('desc');
+  const [ordenacaoRanking, setOrdenacaoRanking] = useState<RankingSort[]>([
+    { key: 'aprovacao', direction: 'desc' },
+  ]);
   const [buscaRanking, setBuscaRanking] = useState('');
   const [buscaInterdicoes, setBuscaInterdicoes] = useState('');
   const [buscaAuditoria, setBuscaAuditoria] = useState('');
@@ -150,8 +171,67 @@ export default function App() {
   });
   const ranking = Array.from(porMunicipio.values())
     .map((item) => ({ ...item, taxa: item.total ? (item.aprovados / item.total) * 100 : 0 }))
-    .sort((a, b) => ordemRanking === 'desc' ? b.taxa - a.taxa : a.taxa - b.taxa);
+    .sort((a, b) => {
+      for (const criterio of ordenacaoRanking) {
+        const valorA = criterio.key === 'municipio' ? a.municipio
+          : criterio.key === 'total' ? a.total
+            : criterio.key === 'aprovacao' ? a.taxa
+              : criterio.key === 'reprovacao' ? (a.reprovados / a.total) * 100
+                : (a.interditados / a.total) * 100;
+        const valorB = criterio.key === 'municipio' ? b.municipio
+          : criterio.key === 'total' ? b.total
+            : criterio.key === 'aprovacao' ? b.taxa
+              : criterio.key === 'reprovacao' ? (b.reprovados / b.total) * 100
+                : (b.interditados / b.total) * 100;
+        const comparacao = typeof valorA === 'string' && typeof valorB === 'string'
+          ? valorA.localeCompare(valorB, 'pt-BR')
+          : Number(valorA) - Number(valorB);
+        if (comparacao !== 0) return criterio.direction === 'desc' ? -comparacao : comparacao;
+      }
+      return a.municipio.localeCompare(b.municipio, 'pt-BR');
+    });
   const rankingFiltrado = ranking.filter((item) => item.municipio.toLocaleLowerCase('pt-BR').includes(buscaRanking.toLocaleLowerCase('pt-BR')));
+
+  function alternarCriterioRanking(key: RankingSortKey) {
+    setOrdenacaoRanking((atual) => {
+      const existente = atual.find((criterio) => criterio.key === key);
+      if (existente) {
+        return atual.map((criterio) => criterio.key === key
+          ? { ...criterio, direction: criterio.direction === 'desc' ? 'asc' : 'desc' }
+          : criterio);
+      }
+      return [...atual, { key, direction: key === 'municipio' ? 'asc' : 'desc' }];
+    });
+  }
+
+  function moverCriterioRanking(key: RankingSortKey, deslocamento: number) {
+    setOrdenacaoRanking((atual) => {
+      const origem = atual.findIndex((criterio) => criterio.key === key);
+      const destino = origem + deslocamento;
+      if (origem < 0 || destino < 0 || destino >= atual.length) return atual;
+      const novaOrdenacao = [...atual];
+      [novaOrdenacao[origem], novaOrdenacao[destino]] = [novaOrdenacao[destino], novaOrdenacao[origem]];
+      return novaOrdenacao;
+    });
+  }
+
+  function renderCabecalhoRanking(key: RankingSortKey) {
+    const criterioAtivo = ordenacaoRanking.findIndex((criterio) => criterio.key === key);
+    const criterio = ordenacaoRanking[criterioAtivo];
+    const label = rankingSortOptions.find((opcao) => opcao.key === key)?.label ?? key;
+
+    return (
+      <th key={key} aria-sort={criterioAtivo === 0 ? (criterio.direction === 'desc' ? 'descending' : 'ascending') : undefined}>
+        <button type="button" className="ranking-sort-header" onClick={() => alternarCriterioRanking(key)}>
+          {label}
+          {criterio && <span className="ranking-sort-indicator" aria-label={`prioridade ${criterioAtivo + 1}, ${criterio.direction === 'desc' ? 'decrescente' : 'crescente'}`}>
+            {criterio.direction === 'desc' ? <ArrowDown size={12} /> : <ArrowUp size={12} />}
+            {criterioAtivo + 1}
+          </span>}
+        </button>
+      </th>
+    );
+  }
 
   const dadosValeParaiba = filtrados.filter((item) => municipiosValeParaibaNormalizados.has(item.MUNICIPIO?.trim().toLocaleUpperCase('pt-BR')));
   const existeValeSPNaFonte = data.some((item) => municipiosValeParaibaNormalizados.has(item.MUNICIPIO?.trim().toLocaleUpperCase('pt-BR')));
@@ -426,13 +506,50 @@ export default function App() {
       <section className="panel ranking-panel">
         <div className="panel-heading ranking-heading">
           <div><p className="eyebrow">CONFORMIDADE MUNICIPAL</p><h3>Ranking de municípios</h3></div>
-          <div className="table-tools">
+          <div className="ranking-search">
             <label className="search-field compact-search"><Search size={15} /><span className="sr-only">Buscar no ranking</span><input value={buscaRanking} onChange={(event) => setBuscaRanking(event.target.value)} placeholder="Filtrar municípios" /></label>
-            <button className="sort-button" onClick={() => setOrdemRanking(ordemRanking === 'desc' ? 'asc' : 'desc')}>
-              {ordemRanking === 'desc' ? <ArrowDownWideNarrow size={16} /> : <ArrowUpWideNarrow size={16} />}
-              {ordemRanking === 'desc' ? 'Maior aprovação' : 'Menor aprovação'}
-            </button>
           </div>
+        </div>
+        <div className="ranking-sort-card">
+          <div className="ranking-sort-info">
+            <span className="ranking-sort-icon"><SlidersHorizontal size={15} /></span>
+            <div><span className="ranking-sort-title">Ordenar por</span><span className="ranking-sort-description">Os critérios são aplicados na ordem abaixo</span></div>
+            <span className="ranking-sort-count">{ordenacaoRanking.length} {ordenacaoRanking.length === 1 ? 'critério' : 'critérios'}</span>
+          </div>
+          <ol className="ranking-sort-list">
+            {ordenacaoRanking.map((criterio, index) => (
+              <li key={criterio.key}>
+                <span className="sort-priority">{index + 1}</span>
+                <span className="sort-label">{rankingSortOptions.find((opcao) => opcao.key === criterio.key)?.label}</span>
+                <button type="button" className="sort-direction" onClick={() => alternarCriterioRanking(criterio.key)} aria-label={`Inverter ordem de ${rankingSortOptions.find((opcao) => opcao.key === criterio.key)?.label}`}>
+                  {criterio.direction === 'desc' ? <ArrowDownWideNarrow size={13} /> : <ArrowUpWideNarrow size={13} />}
+                  <span>{criterio.direction === 'desc' ? 'Maior primeiro' : 'Menor primeiro'}</span>
+                </button>
+                <span className="sort-divider" />
+                <button type="button" className="sort-priority-button" onClick={() => moverCriterioRanking(criterio.key, -1)} disabled={index === 0} aria-label={`Aumentar prioridade de ${rankingSortOptions.find((opcao) => opcao.key === criterio.key)?.label}`}><ArrowUp size={13} /></button>
+                <button type="button" className="sort-priority-button" onClick={() => moverCriterioRanking(criterio.key, 1)} disabled={index === ordenacaoRanking.length - 1} aria-label={`Diminuir prioridade de ${rankingSortOptions.find((opcao) => opcao.key === criterio.key)?.label}`}><ArrowDown size={13} /></button>
+                <button type="button" className="sort-remove-button" onClick={() => setOrdenacaoRanking((atual) => atual.filter((item) => item.key !== criterio.key))} aria-label={`Remover ${rankingSortOptions.find((opcao) => opcao.key === criterio.key)?.label}`}><X size={13} /></button>
+              </li>
+            ))}
+          </ol>
+          <label className="sr-only" htmlFor="add-ranking-sort">Adicionar critério de ordenação</label>
+          <select
+            id="add-ranking-sort"
+            className="add-ranking-sort"
+            value=""
+            disabled={ordenacaoRanking.length === rankingSortOptions.length}
+            onChange={(event) => {
+              const key = rankingSortOptions.find((opcao) => opcao.key === event.target.value)?.key;
+              if (key && !ordenacaoRanking.some((criterio) => criterio.key === key)) {
+                setOrdenacaoRanking((atual) => [...atual, { key, direction: key === 'municipio' ? 'asc' : 'desc' }]);
+              }
+            }}
+          >
+            <option value="" disabled>+ Adicionar critério</option>
+            {rankingSortOptions.filter((opcao) => !ordenacaoRanking.some((criterio) => criterio.key === opcao.key)).map((opcao) => (
+              <option key={opcao.key} value={opcao.key}>{opcao.label}</option>
+            ))}
+          </select>
         </div>
         <div className="ranking-layout">
           <div className="ranking-chart"><ResponsiveContainer width="100%" height="100%">
@@ -446,7 +563,7 @@ export default function App() {
           </ResponsiveContainer></div>
           <div className="table-scroll ranking-table-wrap">
             <table>
-              <thead><tr><th>Município</th><th>Bombas</th><th>Aprovação</th><th>Reprovação</th><th>Interdição</th></tr></thead>
+              <thead><tr>{rankingSortOptions.map((opcao) => renderCabecalhoRanking(opcao.key))}</tr></thead>
               <tbody>{rankingFiltrado.map((item) => <tr key={item.municipio}><td>{item.municipio}</td><td>{formatNumber(item.total)}</td><td className="good-text">{percent(item.aprovados, item.total)}</td><td className="warn-text">{percent(item.reprovados, item.total)}</td><td className="danger-text">{percent(item.interditados, item.total)}</td></tr>)}</tbody>
             </table>
             {!rankingFiltrado.length && <p className="empty-state">Nenhum município encontrado neste recorte.</p>}
