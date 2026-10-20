@@ -14,6 +14,7 @@ import {
   ClipboardCheck,
   Fuel,
   MapPin,
+  Plus,
   Search,
   SlidersHorizontal,
   ShieldCheck,
@@ -109,6 +110,8 @@ export default function App() {
   const [loadError, setLoadError] = useState('');
   const [municipioFiltro, setMunicipioFiltro] = useState('');
   const [anoFiltro, setAnoFiltro] = useState('Todos');
+  const [municipioComparacaoSelecionado, setMunicipioComparacaoSelecionado] = useState('');
+  const [municipiosComparacao, setMunicipiosComparacao] = useState<string[]>([]);
   const [ordenacaoRanking, setOrdenacaoRanking] = useState<RankingSort[]>([
     { key: 'aprovacao', direction: 'desc' },
   ]);
@@ -292,6 +295,28 @@ export default function App() {
   const listaInterdicoesFiltrada = listaInterdicoes.filter((item) => `${item.MUNICIPIO} ${item.PROPRIETARIO} ${item.MARCA} ${item.MODELO} ${item.NUMERO_INMETRO}`.toLocaleLowerCase('pt-BR').includes(buscaInterdicoes.toLocaleLowerCase('pt-BR')));
   const registrosAuditoria = filtrados.filter((item) => `${item.MUNICIPIO} ${item.RESULTADO} ${item.STATUS_CONSOLIDADO} ${item.PROPRIETARIO} ${item.NUMERO_INMETRO}`.toLocaleLowerCase('pt-BR').includes(buscaAuditoria.toLocaleLowerCase('pt-BR')));
   const municipiosUnicos = Array.from(new Set(data.map((item) => item.MUNICIPIO?.trim()).filter(Boolean))).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+  const dadosComparacaoAno = data.filter((item) => {
+    const date = parseDate(item.DATA_VERIFICACAO);
+    return anoFiltro === 'Todos' || date?.getFullYear() === Number(anoFiltro);
+  });
+  const comparacaoMunicipios = municipiosComparacao.map((municipio) => {
+    const registros = dadosComparacaoAno.filter((item) => item.MUNICIPIO?.trim() === municipio);
+    const aprovadosMunicipio = registros.filter((item) => getStatus(item) === 'Aprovado').length;
+    const reprovadosMunicipio = registros.filter((item) => getStatus(item) === 'Reprovado').length;
+    const interditadosMunicipio = registros.filter((item) => getStatus(item) === 'Interditado').length;
+    const totalMunicipio = registros.length;
+    return {
+      municipio,
+      total: totalMunicipio,
+      aprovados: aprovadosMunicipio,
+      reprovados: reprovadosMunicipio,
+      interditados: interditadosMunicipio,
+      aprovacao: totalMunicipio ? (aprovadosMunicipio / totalMunicipio) * 100 : 0,
+      reprovacao: totalMunicipio ? (reprovadosMunicipio / totalMunicipio) * 100 : 0,
+      interdicao: totalMunicipio ? (interditadosMunicipio / totalMunicipio) * 100 : 0,
+    };
+  });
+  const comparacaoMunicipiosComDados = comparacaoMunicipios.filter((item) => item.total > 0);
   const dadosPizza = [
     { nome: 'Aprovadas', valor: aprovados, cor: '#16835d' },
     { nome: 'Reprovadas', valor: reprovados, cor: '#c47a19' },
@@ -501,6 +526,80 @@ export default function App() {
             </tr>)}</tbody>
           </table>
         </div>}
+      </section>
+
+      <section className="panel municipality-comparison-panel">
+        <div className="panel-heading">
+          <div><p className="eyebrow">COMPARAÇÃO DIRETA</p><h3>Compare municípios</h3></div>
+          <span className="count-pill region-pill">{municipiosComparacao.length} / 5 selecionados</span>
+        </div>
+        <p className="comparison-description">Compare os resultados dos municípios no ano selecionado. Este comparativo não é alterado pela busca geral de município.</p>
+        <div className="comparison-controls">
+          <label className="comparison-select-field" htmlFor="municipio-comparacao">Adicionar município</label>
+          <select
+            id="municipio-comparacao"
+            className="comparison-select"
+            value={municipioComparacaoSelecionado}
+            onChange={(event) => setMunicipioComparacaoSelecionado(event.target.value)}
+            disabled={municipiosComparacao.length >= 5}
+          >
+            <option value="">Selecione um município</option>
+            {municipiosUnicos.filter((municipio) => !municipiosComparacao.includes(municipio)).map((municipio) => (
+              <option key={municipio} value={municipio}>{municipio}</option>
+            ))}
+          </select>
+          <button
+            type="button"
+            className="comparison-add-button"
+            disabled={!municipioComparacaoSelecionado || municipiosComparacao.length >= 5}
+            onClick={() => {
+              if (municipioComparacaoSelecionado && !municipiosComparacao.includes(municipioComparacaoSelecionado)) {
+                setMunicipiosComparacao((atual) => [...atual, municipioComparacaoSelecionado]);
+                setMunicipioComparacaoSelecionado('');
+              }
+            }}
+          >
+            <Plus size={15} /> Adicionar
+          </button>
+        </div>
+        {municipiosComparacao.length > 0 && <ul className="comparison-selected-list" aria-label="Municípios selecionados para comparação">
+          {municipiosComparacao.map((municipio) => (
+            <li key={municipio}>
+              <span>{municipio}</span>
+              <button type="button" aria-label={`Remover ${municipio} da comparação`} onClick={() => setMunicipiosComparacao((atual) => atual.filter((item) => item !== municipio))}><X size={14} /></button>
+            </li>
+          ))}
+        </ul>}
+        {municipiosComparacao.length >= 2 && comparacaoMunicipiosComDados.length > 0 ? <div className="comparison-layout">
+          <div className="comparison-chart">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={comparacaoMunicipiosComDados} margin={{ top: 8, right: 12, left: -12, bottom: 30 }}>
+                <CartesianGrid stroke="#e7e9e5" vertical={false} />
+                <XAxis dataKey="municipio" tickLine={false} axisLine={false} angle={-22} textAnchor="end" interval={0} height={52} tick={{ fill: '#4f5650', fontSize: 10 }} />
+                <YAxis domain={[0, 100]} tickFormatter={(value: number) => `${value}%`} tickLine={false} axisLine={false} tick={{ fill: '#737a74', fontSize: 10 }} />
+                <Tooltip formatter={(value) => `${Number(value).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%`} />
+                <Bar dataKey="aprovacao" name="Aprovação" fill="#16835d" radius={[3, 3, 0, 0]} barSize={18} />
+                <Bar dataKey="reprovacao" name="Reprovação" fill="#c47a19" radius={[3, 3, 0, 0]} barSize={18} />
+                <Bar dataKey="interdicao" name="Interdição" fill="#c44f45" radius={[3, 3, 0, 0]} barSize={18} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="table-scroll comparison-table-wrap">
+            <table>
+              <thead><tr><th>Município</th><th>Bombas</th><th>Aprov.</th><th>Reprov.</th><th>Interd.</th></tr></thead>
+              <tbody>{comparacaoMunicipios.map((item) => <tr key={item.municipio}>
+                <td>{item.municipio}</td>
+                {item.total ? <>
+                  <td>{formatNumber(item.total)}</td>
+                  <td className="good-text">{percent(item.aprovados, item.total)}</td>
+                  <td className="warn-text">{percent(item.reprovados, item.total)}</td>
+                  <td className="danger-text">{percent(item.interditados, item.total)}</td>
+                </> : <td colSpan={4} className="no-data-cell">Sem dados para o período</td>}
+              </tr>)}</tbody>
+            </table>
+          </div>
+        </div> : <p className="empty-state">{municipiosComparacao.length >= 2 ? 'Os municípios selecionados não têm registros no ano escolhido.' : municipiosComparacao.length === 1 ? 'Adicione pelo menos mais um município para comparar.' : 'Selecione de 2 a 5 municípios para visualizar a comparação.'}</p>}
+        <p className="comparison-footnote">O denominador das taxas é o total de bombas registradas para cada município no período, inclusive registros sem classificação. O volume fiscalizado aparece na tabela para contextualizar os percentuais.</p>
       </section>
 
       <section className="panel ranking-panel">
