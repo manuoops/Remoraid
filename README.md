@@ -1,6 +1,6 @@
 <h1 align="center"> REMORAID</h1>
 <p align="center">
-  <img src="public/ChatGPT Image 29 de set. de 2026, 07_38_09 (1).png" alt="Logo do projeto" width="200"/>
+  <img src="public/Logo.png" alt="Logo do projeto" width="200"/>
 </p>
 
 <h3 align="center">API FATEC - Tratamento e Transparência de Dados Públicos de Bombas de Combustível (IPEM-SP)</h3>
