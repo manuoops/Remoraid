@@ -1,4 +1,7 @@
 <h1 align="center"> REMORAID</h1>
+<p align="center">
+  <img src="public/ChatGPT Image 29 de set. de 2026, 07_38_09 (1).png" alt="Logo do projeto" width="200"/>
+</p>
 
 <h3 align="center">API FATEC - Tratamento e Transparência de Dados Públicos de Bombas de Combustível (IPEM-SP)</h3>
 
@@ -52,7 +55,7 @@ O desafio envolve tratar, limpar e normalizar bases de dados heterogêneas (geog
 | Sprint | Tema | Stories | Status |
 |--------|------|---------|--------|
 | 1 | Tratamento dos Dados | #1 a #9 | ✅ Concluída |
-| 2 | "Brincando" com dados (análise exploratória) | #10 a #18 | 🔄 Em andamento |
+| 2 | "Brincando" com dados (análise exploratória) | #10 a #18 | ✅ Concluída |
 | 3 | Aplicação visual, prática e didática | #19 a #30 | ⏰ Planejada |
 
 ### SPRINT 1 - Tratamento dos Dados ✅
@@ -69,19 +72,19 @@ O desafio envolve tratar, limpar e normalizar bases de dados heterogêneas (geog
 | 8 | Alta | Como responsável do IPEM-SP, quero que os resultados das fiscalizações sejam classificados de forma padronizada, para calcular corretamente aprovação, reprovação e interdição | 1 | ✅ |
 | 9 | Alta | Como responsável do IPEM-SP, quero que seja formada uma base de dados robusta e tratada, com dados "limpos", para que seja a base das próximas sprints | 1 | ✅ |
 
-### SPRINT 2 - "Brincando" com dados 🔄
+### SPRINT 2 - "Brincando" com dados ✅
 
 | Rank | Prioridade | User Story | Story Points | Status |
 |------|------------|------------|--------------|--------|
-| 10 | Alta | Como responsável do IPEM-SP, quero visualizar a taxa de aprovação das bombas de combustível filtradas na outra sprint, para entender o nível geral de conformidade encontrado nas fiscalizações | 3 | 🔄 |
-| 11 | Alta | Como responsável do IPEM-SP, quero visualizar a taxa de reprovação das bombas de combustível filtradas na outra sprint, para entender o nível geral de inconformidade encontrado nas fiscalizações | 1 | 🔄 |
-| 12 | Média | Como responsável do IPEM-SP, quero visualizar as bombas que foram interditadas, para verificar os casos mais graves encontrados nas fiscalizações | 1 | 🔄 |
-| 13 | Média | Como responsável do IPEM-SP, quero entender quais foram os principais motivos de interdição nas bombas aferidas, com objetivo de entender quais irregularidades surgem com mais frequência | 1 | 🔄 |
-| 14 | Alta | Como responsável do IPEM-SP, quero visualizar o ranking de municípios com mais ou menos índices de conformidade com as regras de aferição | 3 | 🔄 |
-| 15 | Alta | Como responsável do IPEM-SP, quero comparar os índices gerados entre diferentes regiões, para ajudar a direcionar as equipes de fiscalização | 2 | 🔄 |
-| 16 | Alta | Como responsável do IPEM-SP, quero poder analisar os resultados obtidos ao longo do tempo, para verificar evoluções ou pioras nos índices apurados | 2 | 🔄 |
-| 17 | Média | Como responsável do IPEM-SP, quero visualizar o número exato de bombas apuradas por município e por região, para compreender a abrangência das ações de fiscalização | 3 | 🔄 |
-| 18 | Média | Como responsável do IPEM-SP, quero poder validar os indicadores apresentados, para que se mantenha um processo coerente com a base de dados fonte da pesquisa | 2 | 🔄 |
+| 10 | Alta | Como responsável do IPEM-SP, quero visualizar a taxa de aprovação das bombas de combustível filtradas na outra sprint, para entender o nível geral de conformidade encontrado nas fiscalizações | 3 | ✅ |
+| 11 | Alta | Como responsável do IPEM-SP, quero visualizar a taxa de reprovação das bombas de combustível filtradas na outra sprint, para entender o nível geral de inconformidade encontrado nas fiscalizações | 1 | ✅ |
+| 12 | Média | Como responsável do IPEM-SP, quero visualizar as bombas que foram interditadas, para verificar os casos mais graves encontrados nas fiscalizações | 1 | ✅ |
+| 13 | Média | Como responsável do IPEM-SP, quero entender quais foram os principais motivos de interdição nas bombas aferidas, com objetivo de entender quais irregularidades surgem com mais frequência | 1 | ✅ |
+| 14 | Alta | Como responsável do IPEM-SP, quero visualizar o ranking de municípios com mais ou menos índices de conformidade com as regras de aferição | 3 | ✅ |
+| 15 | Alta | Como responsável do IPEM-SP, quero comparar os índices gerados entre diferentes regiões, para ajudar a direcionar as equipes de fiscalização | 2 | ✅ |
+| 16 | Alta | Como responsável do IPEM-SP, quero poder analisar os resultados obtidos ao longo do tempo, para verificar evoluções ou pioras nos índices apurados | 2 | ✅ |
+| 17 | Média | Como responsável do IPEM-SP, quero visualizar o número exato de bombas apuradas por município e por região, para compreender a abrangência das ações de fiscalização | 3 | ✅ |
+| 18 | Média | Como responsável do IPEM-SP, quero poder validar os indicadores apresentados, para que se mantenha um processo coerente com a base de dados fonte da pesquisa | 2 | ✅ |
 
 ### SPRINT 3 - Aplicação visual, prática e didática ⏰
 
@@ -162,7 +165,7 @@ Em desenvolvimento... 🚧
 
 #### 📈 Sprint 2 - "Brincando" com dados
 
-- **Status:** 🔄 Em andamento
+- **Status:** ✅ Concluída
 - **Objetivo:** realizar a análise exploratória e gerar os indicadores de conformidade (taxas, ranking, comparação regional e evolução temporal).
 - **Entregas previstas:** notebooks de análise e indicadores validados (stories #10 a #18).
 
