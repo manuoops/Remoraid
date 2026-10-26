@@ -153,7 +153,223 @@ Uma user story só é considerada concluída quando:
 
 ## 🛠️ Instalação e uso <a name="instalacao"></a>
 
-Em desenvolvimento... 🚧
+  <p>
+    Esta seção apresenta as instruções necessárias para configurar o ambiente de desenvolvimento e executar a aplicação web do <strong>Remoraid</strong>, projeto voltado à análise e à transparência dos dados públicos de fiscalização de bombas medidoras de combustível do IPEM-SP.
+  </p>
+
+  <h3>📋 Pré-requisitos</h3>
+
+  <p>Antes de iniciar, certifique-se de possuir os seguintes recursos instalados:</p>
+
+  <ul>
+    <li><strong>Git:</strong> para clonar o repositório.</li>
+    <li><strong>Node.js:</strong> ambiente necessário para executar as ferramentas de desenvolvimento da aplicação.</li>
+    <li><strong>npm:</strong> gerenciador de pacotes utilizado para instalar as dependências do projeto. Ele é instalado junto com o Node.js.</li>
+  </ul>
+
+  <p>
+    Recomenda-se utilizar o Node.js 22.12 ou superior, compatível com os requisitos das ferramentas utilizadas pelo projeto.
+  </p>
+
+  <h3>1. Clonar o repositório</h3>
+
+  <p>Abra um terminal e execute o comando abaixo para baixar o código-fonte:</p>
+
+  <pre><code>git clone https://github.com/manuoops/Remoraid.git</code></pre>
+
+  <p>Em seguida, entre na pasta do projeto:</p>
+
+  <pre><code>cd Remoraid</code></pre>
+
+  <h3>2. Instalar as dependências</h3>
+
+  <p>Na raiz do projeto, execute:</p>
+
+  <pre><code>npm install</code></pre>
+
+  <p>
+    Esse comando instala as bibliotecas e ferramentas declaradas no arquivo <code>package.json</code>, incluindo React, TypeScript, Vite, PapaParse, Recharts e Lucide React.
+  </p>
+
+  <p>
+    O arquivo <code>package-lock.json</code> registra as versões das dependências resolvidas durante a instalação.
+  </p>
+
+  <h3>3. Configurar a base de dados</h3>
+
+  <p>
+    A aplicação web utiliza um arquivo CSV para carregar os registros das fiscalizações.
+  </p>
+
+  <p>O arquivo esperado é:</p>
+
+  <pre><code>public/
+└── dados_bombas_tratados.csv</code></pre>
+
+  <p>
+    A aplicação procura esse arquivo automaticamente por meio do caminho <code>/dados_bombas_tratados.csv</code>, definido em <code>src/App.tsx</code>.
+  </p>
+
+  <p>
+    Antes de executar o dashboard, verifique se o arquivo está presente no diretório <code>public/</code> e se contém os dados tratados necessários para a visualização.
+  </p>
+
+  <p>A base deve possuir cabeçalhos compatíveis com os campos utilizados pela aplicação, incluindo:</p>
+
+  <ul>
+    <li><code>MUNICIPIO</code></li>
+    <li><code>BAIRRO</code></li>
+    <li><code>PROPRIETARIO</code></li>
+    <li><code>DESCRICAO</code></li>
+    <li><code>MARCA</code></li>
+    <li><code>MODELO</code></li>
+    <li><code>NUMERO_INMETRO</code></li>
+    <li><code>NUMERO_SERIE</code></li>
+    <li><code>DATA_VERIFICACAO</code></li>
+    <li><code>RESULTADO</code></li>
+    <li><code>STATUS_CONSOLIDADO</code></li>
+  </ul>
+
+  <p>
+    Os nomes das colunas devem corresponder aos esperados pelo código. A classificação das fiscalizações e os indicadores do dashboard dependem da consistência dessas informações.
+  </p>
+
+  <h3>4. Executar a aplicação em ambiente de desenvolvimento</h3>
+
+  <p>
+    Depois de instalar as dependências e verificar a disponibilidade da base de dados, inicie o servidor local:
+  </p>
+
+  <pre><code>npm run dev</code></pre>
+
+  <p>
+    O Vite exibirá no terminal o endereço local para acessar a aplicação. Normalmente, o endereço padrão é:
+  </p>
+
+  <pre><code>http://localhost:5173</code></pre>
+
+  <p>Abra o endereço indicado pelo terminal em seu navegador.</p>
+
+  <p>
+    Durante o desenvolvimento, o servidor permite visualizar as alterações realizadas no código sem precisar gerar uma nova versão de produção a cada modificação.
+  </p>
+
+  <h3>5. Gerar a versão de produção</h3>
+
+  <p>
+    Para verificar a compilação do projeto e gerar os arquivos de produção, execute:
+  </p>
+
+  <pre><code>npm run build</code></pre>
+
+  <p>
+    Esse comando executa a verificação de tipos do TypeScript e, em seguida, gera a versão de produção da aplicação utilizando o Vite.
+  </p>
+
+  <p>
+    Quando a compilação é concluída com sucesso, os arquivos gerados ficam no diretório <code>dist/</code>.
+  </p>
+
+  <h3>6. Visualizar a versão de produção localmente</h3>
+
+  <p>
+    Depois de gerar a versão de produção, execute:
+  </p>
+
+  <pre><code>npm run preview</code></pre>
+
+  <p>
+    O Vite disponibilizará um servidor local para visualizar os arquivos gerados.
+  </p>
+
+  <p>
+    Utilize o endereço apresentado no terminal para acessar a aplicação pelo navegador.
+  </p>
+
+  <p>
+    Esse procedimento serve para verificar a versão compilada localmente. Ele não publica a aplicação na internet.
+  </p>
+
+  <h3>7. Executar a análise estática do código</h3>
+
+  <p>
+    O projeto também disponibiliza um comando para analisar o código com o Oxlint:
+  </p>
+
+  <pre><code>npm run lint</code></pre>
+
+  <p>
+    Esse comando executa a ferramenta de análise estática configurada no projeto e ajuda a identificar possíveis problemas no código durante o desenvolvimento.
+  </p>
+
+  <h3>📁 Principais arquivos e diretórios</h3>
+
+  <p>
+    A estrutura abaixo apresenta os principais arquivos identificados durante a análise do projeto:
+  </p>
+
+  <pre><code>Remoraid/
+├── public/
+│   └── dados_bombas_tratados.csv   # Base esperada pela aplicação
+├── src/
+│   ├── App.tsx                     # Lógica e componentes do dashboard
+│   ├── App.css                     # Estilos da aplicação
+│   ├── index.css                   # Estilos globais
+│   └── main.tsx                    # Ponto de entrada do React
+├── index.html                      # Documento HTML principal
+├── package.json                   # Dependências e comandos
+├── package-lock.json              # Registro das dependências resolvidas
+├── tsconfig.json                  # Configuração principal do TypeScript
+├── tsconfig.app.json              # Configuração do TypeScript para a aplicação
+├── tsconfig.node.json             # Configuração do TypeScript para ferramentas Node
+└── vite.config.ts                 # Configuração do Vite</code></pre>
+
+  <p>
+    Essa lista destaca os arquivos centrais da aplicação web e não representa necessariamente todos os arquivos existentes no repositório.
+  </p>
+
+  <h3>⚠️ Solução de problemas</h3>
+
+  <h4>O comando <code>npm</code> não é reconhecido</h4>
+
+  <p>
+    Verifique se o Node.js foi instalado corretamente. Feche e abra novamente o terminal e execute:
+  </p>
+
+  <pre><code>node -v
+npm -v</code></pre>
+
+  <p>
+    Se os comandos não forem reconhecidos, confira a instalação do Node.js e a configuração do PATH do sistema.
+  </p>
+
+  <h4>O dashboard não carrega os dados</h4>
+
+  <p>
+    Verifique se o arquivo <code>dados_bombas_tratados.csv</code> está no diretório <code>public/</code> e se o nome corresponde exatamente ao caminho utilizado pela aplicação.
+  </p>
+
+  <p>
+    Caso o arquivo esteja ausente ou inacessível, a aplicação poderá apresentar uma mensagem informando que não foi possível carregar os dados.
+  </p>
+
+  <h4>O comando <code>npm run build</code> apresenta erros</h4>
+
+  <p>
+    Confira se todas as dependências foram instaladas e se os arquivos necessários estão presentes. Para reinstalar as dependências declaradas no projeto, pode-se executar:
+  </p>
+
+  <pre><code>npm ci</code></pre>
+
+  <p>
+    Esse comando utiliza o <code>package-lock.json</code> para instalar as dependências registradas no arquivo de bloqueio.
+  </p>
+
+  <h4>A aplicação funciona localmente, mas não foi publicada na internet</h4>
+
+  <p>
+    Os comandos <code>npm run dev</code> e <code>npm run preview</code> disponibilizam servidores locais. Para disponibilizar o sistema publicamente, será necessário configurar uma plataforma de hospedagem compatível com aplicações web estáticas e garantir que a base de dados esteja incluída no processo de publicação.
+  </p>
 
 ---
 
