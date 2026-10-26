@@ -113,18 +113,20 @@ O desafio envolve tratar, limpar e normalizar bases de dados heterogêneas (geog
 
 Uma user story só entra na Sprint quando:
 
-- [ ] Está no formato *"Como [personagem], quero [algo] para que [objetivo]"*
+- [ ] Está no formato *"Como [personagem], quero [ação] para que [benefício]"*
 - [ ] Contém critérios de aceitação
 - [ ] Tem prioridade atribuída (Alta, Média ou Baixa)
-- [ ] Tem Story Points estimados
+- [ ] Tem Story Points estimados pelo time
+- [ ] Cabe em uma única Sprint e não depende de outra User Story
 
 ### DoD - Definition of Done 🏁
 
 Uma user story só é considerada concluída quando:
 
-- [ ] Código revisado via Pull Request
+- [ ] Código revisado via Pull Request e aprovado por pelo menos 1 outro membro
+- [ ] Todos os critérios de aceitação foram atendidos
 - [ ] Funcionalidade implementada e testada
-- [ ] Documentação atualizada
+- [ ] Documentação no README está atualizada
 
 ---
 
