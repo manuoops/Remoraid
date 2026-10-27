@@ -481,7 +481,7 @@ export default function App() {
               <BarChart data={rankingMunicipiosVale.slice(0, 10)} layout="vertical" margin={{ top: 0, right: 24, left: 4, bottom: 0 }}>
                 <CartesianGrid stroke="#e7e9e5" horizontal={false} />
                 <XAxis type="number" allowDecimals={false} tickLine={false} axisLine={false} tick={{ fill: '#737a74', fontSize: 10 }} />
-                <YAxis type="category" dataKey="nome" width={118} tickLine={false} axisLine={false} tick={{ fill: '#4f5650', fontSize: 10 }} />
+                <YAxis type="category" dataKey="nome" width={118} interval={0} tickLine={false} axisLine={false} tick={{ fill: '#4f5650', fontSize: 10 }} />
                 <Tooltip formatter={(value) => [formatNumber(Number(value)), 'Bombas']} />
                 <Bar dataKey="total" name="Bombas" fill="#64856a" radius={[0, 3, 3, 0]} barSize={13} />
               </BarChart>
