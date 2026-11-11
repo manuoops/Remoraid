@@ -188,7 +188,7 @@ Uma user story só é considerada concluída quando:
   <pre><code>npm install</code></pre>
 
   <p>
-    Esse comando instala as bibliotecas e ferramentas declaradas no arquivo <code>package.json</code>, incluindo React, TypeScript, Vite, PapaParse, Recharts e Lucide React.
+    Esse comando instala as bibliotecas e ferramentas declaradas no arquivo <code>package.json</code>, incluindo React, TypeScript, Vite, PapaParse, Recharts, Leaflet e Lucide React.
   </p>
 
   <p>
@@ -232,6 +232,20 @@ Uma user story só é considerada concluída quando:
 
   <p>
     Os nomes das colunas devem corresponder aos esperados pelo código. A classificação das fiscalizações e os indicadores do dashboard dependem da consistência dessas informações.
+  </p>
+
+  <h3>Mapa e desempenho</h3>
+
+  <p>
+    O mapa agrupa as verificações por município, permite abrir os detalhes e filtrar pelo município clicando em seu marcador. Os marcadores são agrupados ao visualizar o Brasil e se separam ao aproximar o mapa. A camada cartográfica usa OpenStreetMap e requer conexão com a internet.
+  </p>
+
+  <p>
+    A base atual não contém latitude, longitude ou endereço dos postos. Por isso, cada ponto usa uma coordenada aproximada do centro do município e representa um total agregado — não a localização exata de uma bomba. Municípios sem coordenada cadastrada continuam nos indicadores, mas não recebem marcador.
+  </p>
+
+  <p>
+    Para reduzir travamentos, a leitura do CSV ocorre em um Web Worker, campos de busca e status são preparados uma vez, e os indicadores são memorizados entre interações. As listas de auditoria continuam paginadas.
   </p>
 
   <h3>4. Executar a aplicação em ambiente de desenvolvimento</h3>

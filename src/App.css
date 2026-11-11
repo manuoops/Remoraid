@@ -18,7 +18,11 @@
 
 .dashboard * { box-sizing: border-box; }
 .dashboard button, .dashboard input, .dashboard select { font: inherit; }
-.loading { display: grid; min-height: 100vh; place-items: center; color: #48524a; font: 16px 'Aptos', 'Segoe UI', sans-serif; }
+.loading { display: flex; min-height: 100vh; align-items: center; justify-content: center; gap: 11px; color: #48524a; font: 16px 'Aptos', 'Segoe UI', sans-serif; }
+.loading-spinner, .updating-spinner { width: 18px; height: 18px; flex: 0 0 auto; border: 2px solid #d5e4d8; border-top-color: #16835d; border-radius: 50%; animation: dashboard-spin 700ms linear infinite; }
+.updating-indicator { position: fixed; z-index: 2000; top: 14px; left: 50%; display: inline-flex; min-height: 38px; align-items: center; gap: 9px; padding: 0 14px; color: #34493a; background: rgba(255,255,255,.97); border: 1px solid #d9e3da; border-radius: 20px; box-shadow: 0 4px 16px rgba(34,52,39,.16); font-size: 12px; font-weight: 650; transform: translateX(-50%); pointer-events: none; }
+.updating-spinner { width: 15px; height: 15px; border-width: 2px; }
+@keyframes dashboard-spin { to { transform: rotate(360deg); } }
 .topbar { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 1px 0 24px; border-bottom: 1px solid #d8ddd6; }
 .brand, .brand-mark, .filterbar, .search-field, .kpi-top, .panel-heading, .legend, .legend span, .sort-button, .source-tag, .footer-note { display: flex; align-items: center; }
 .brand { gap: 12px; }
@@ -64,6 +68,32 @@
 .panel-heading { justify-content: space-between; gap: 12px; margin-bottom: 13px; }
 .panel-heading h3 { margin: 0; color: #29342c; font-size: 15px; line-height: 1.25; font-weight: 650; letter-spacing: 0; }
 .panel-heading .eyebrow { margin-bottom: 4px; }
+.map-panel { margin-bottom: 14px; padding: 19px; }
+.map-heading { margin-bottom: 12px; }
+.map-heading-actions { display: flex; align-items: center; gap: 8px; }
+.map-clear-button { min-height: 31px; padding: 0 9px; color: #286849; background: #edf5ef; border: 1px solid #d5e5d7; border-radius: 4px; cursor: pointer; font-size: 11px !important; }
+.map-clear-button:hover { background: #e2f0e5; }
+.fuel-map-shell { position: relative; overflow: hidden; border: 1px solid #dce4dc; border-radius: 6px; isolation: isolate; }
+.fuel-map-loading { display: grid; min-height: 360px; place-items: center; color: #647267; background: #e9eee9; border: 1px solid #dce4dc; border-radius: 6px; font-size: 12px; }
+.fuel-map-canvas { width: 100%; height: min(58vh, 500px); min-height: 360px; background: #e9eee9; }
+.fuel-map-legend { position: absolute; z-index: 500; bottom: 20px; left: 12px; display: flex; max-width: calc(100% - 24px); flex-wrap: wrap; align-items: center; gap: 8px 13px; padding: 8px 10px; color: #546056; background: rgba(255,255,255,.95); border: 1px solid #e1e6e1; border-radius: 5px; box-shadow: 0 2px 8px rgba(34, 52, 39, .1); font-size: 10px; }
+.fuel-map-legend span { display: inline-flex; align-items: center; gap: 5px; }
+.fuel-map-legend i { width: 8px; height: 8px; border-radius: 50%; }
+.legend-low { background: #16835d; }
+.legend-medium { background: #c47a19; }
+.legend-high { background: #c44f45; }
+.fuel-map-legend .fuel-map-unmapped { color: #7d6a4e; }
+.fuel-map-marker-wrap, .fuel-map-cluster { display: grid; place-items: center; background: transparent; border: 0; }
+.fuel-map-marker { display: grid; width: 36px; height: 36px; place-items: center; color: white; border: 2px solid rgba(255,255,255,.96); border-radius: 50%; box-shadow: 0 2px 8px rgba(29,48,35,.28); font-size: 10px; font-weight: 750; line-height: 1; text-shadow: 0 1px 2px rgba(0,0,0,.2); transition: transform 120ms ease, box-shadow 120ms ease; }
+.fuel-map-marker:hover { transform: scale(1.13); }
+.fuel-map-marker.is-low-risk { background: #16835d; }
+.fuel-map-marker.is-medium-risk { background: #c47a19; }
+.fuel-map-marker.is-high-risk { background: #c44f45; }
+.fuel-map-marker.is-selected { outline: 3px solid #163f2e; outline-offset: 2px; box-shadow: 0 0 0 5px rgba(255,255,255,.8), 0 3px 10px rgba(29,48,35,.35); }
+.fuel-map-cluster-count { display: grid; width: 44px; height: 44px; place-items: center; color: white; background: #176f50; border: 3px solid rgba(255,255,255,.95); border-radius: 50%; box-shadow: 0 2px 9px rgba(29,48,35,.3); font-size: 12px; font-weight: 750; }
+.fuel-map-popup { display: grid; min-width: 190px; gap: 4px; color: #59645b; font-family: 'Aptos', 'Segoe UI', sans-serif; font-size: 11px; }
+.fuel-map-popup strong { margin-bottom: 2px; color: #293a2f; font-size: 13px; }
+.map-data-note { margin: 10px 0 0; color: #778178; font-size: 10px; line-height: 1.5; }
 .legend { gap: 13px; color: #69736b; font-size: 11px; }
 .legend span { gap: 5px; white-space: nowrap; }
 .legend i { width: 8px; height: 8px; border-radius: 50%; }
@@ -226,6 +256,7 @@ tbody tr:last-child td { border-bottom: 0; }
 
 @media (max-width: 650px) {
   .dashboard { padding: 16px 13px; }
+  .updating-indicator { top: 8px; }
   .topbar { align-items: flex-start; flex-direction: column; gap: 16px; padding-bottom: 16px; }
   .filterbar { width: 100%; justify-content: flex-start; }
   .search-field { flex: 1; width: auto; }
@@ -241,6 +272,11 @@ tbody tr:last-child td { border-bottom: 0; }
   .kpi strong { margin-top: 11px; font-size: 25px; }
   .chart-grid { grid-template-columns: 1fr; gap: 10px; }
   .panel { padding: 15px 13px; }
+  .map-panel { padding: 14px 12px; }
+  .map-heading { align-items: flex-start; flex-direction: column; }
+  .map-heading-actions { width: 100%; flex-wrap: wrap; }
+  .fuel-map-canvas { height: 54vh; min-height: 330px; }
+  .fuel-map-legend { bottom: 14px; left: 8px; gap: 6px 9px; font-size: 9px; }
   .chart-wrap { height: 220px; }
   .data-gap { min-height: 185px; }
   .ranking-layout { gap: 8px; }
@@ -269,4 +305,8 @@ tbody tr:last-child td { border-bottom: 0; }
   .audit-summary { gap: 8px 15px; }
   .pagination { align-items: flex-start; flex-direction: column; }
   .footer-note { line-height: 1.5; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loading-spinner, .updating-spinner { animation-duration: 1400ms; }
 }

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useCallback, useDeferredValue, useEffect, useMemo, useState, useTransition } from 'react';
 import Papa from 'papaparse';
 import {
   AlertTriangle,
@@ -35,7 +35,10 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
+import type { MunicipalityPoint } from './FuelMap';
 import './App.css';
+
+const FuelMap = lazy(() => import('./FuelMap'));
 
 interface BombaData {
   MUNICIPIO: string;
@@ -49,6 +52,15 @@ interface BombaData {
   DATA_VERIFICACAO: string;
   RESULTADO: string;
   STATUS_CONSOLIDADO: string;
+}
+
+interface IndexedBomba extends BombaData {
+  _status: Status;
+  _year: number | null;
+  _date: Date | null;
+  _normalizedMunicipio: string;
+  _auditSearch: string;
+  _interdictionSearch: string;
 }
 
 type Status = 'Aprovado' | 'Reprovado' | 'Interditado' | 'Sem classificação';
@@ -80,7 +92,12 @@ const municipiosValeParaiba = [
 ];
 const municipiosValeParaibaNormalizados = new Set(municipiosValeParaiba.map((nome) => nome.toLocaleUpperCase('pt-BR')));
 
+function isIndexedBomba(record: BombaData): record is IndexedBomba {
+  return '_status' in record;
+}
+
 function getStatus(record: BombaData): Status {
+  if (isIndexedBomba(record)) return record._status;
   const value = `${record.STATUS_CONSOLIDADO || ''} ${record.RESULTADO || ''}`.toLocaleUpperCase('pt-BR');
   if (value.includes('INTERD')) return 'Interditado';
   if (value.includes('REPROV')) return 'Reprovado';
@@ -105,10 +122,13 @@ function formatNumber(value: number) {
 }
 
 export default function App() {
-  const [data, setData] = useState<BombaData[]>([]);
+  const [data, setData] = useState<IndexedBomba[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
+  const [isTransitionPending, startTransition] = useTransition();
+  const [showUpdating, setShowUpdating] = useState(false);
   const [municipioFiltro, setMunicipioFiltro] = useState('');
+  const [municipiosMapaSelecionados, setMunicipiosMapaSelecionados] = useState<string[]>([]);
   const [anoFiltro, setAnoFiltro] = useState('Todos');
   const [municipioComparacaoSelecionado, setMunicipioComparacaoSelecionado] = useState('');
   const [municipiosComparacao, setMunicipiosComparacao] = useState<string[]>([]);
@@ -126,14 +146,50 @@ export default function App() {
   const [graficoRegional, setGraficoRegional] = useState<RegionChart>('rates');
   const [pagina, setPagina] = useState(0);
   const pageSize = 25;
+  const municipioFiltroDiferido = useDeferredValue(municipioFiltro.toLocaleLowerCase('pt-BR'));
+  const buscaRankingDiferida = useDeferredValue(buscaRanking.toLocaleLowerCase('pt-BR'));
+  const buscaInterdicoesDiferida = useDeferredValue(buscaInterdicoes.toLocaleLowerCase('pt-BR'));
+  const buscaAuditoriaDiferida = useDeferredValue(buscaAuditoria.toLocaleLowerCase('pt-BR'));
+  const isFiltering = municipioFiltro.toLocaleLowerCase('pt-BR') !== municipioFiltroDiferido
+    || buscaRanking.toLocaleLowerCase('pt-BR') !== buscaRankingDiferida
+    || buscaInterdicoes.toLocaleLowerCase('pt-BR') !== buscaInterdicoesDiferida
+    || buscaAuditoria.toLocaleLowerCase('pt-BR') !== buscaAuditoriaDiferida;
+  const isUpdating = isTransitionPending || isFiltering;
 
   useEffect(() => {
-    Papa.parse<BombaData>('/dados_bombas_tratados.csv', {
+    if (!isUpdating) {
+      if (!showUpdating) return;
+      const timer = window.setTimeout(() => setShowUpdating(false), 120);
+      return () => window.clearTimeout(timer);
+    }
+    if (showUpdating) return;
+    const timer = window.setTimeout(() => setShowUpdating(true), 160);
+    return () => window.clearTimeout(timer);
+  }, [isUpdating, showUpdating]);
+
+  useEffect(() => {
+    Papa.parse<BombaData>(new URL('/dados_bombas_tratados.csv', window.location.origin).href, {
       download: true,
       header: true,
       skipEmptyLines: true,
+      worker: true,
       complete: (results) => {
-        setData(results.data.filter((row) => row.MUNICIPIO));
+        const rows = results.data.filter((row) => row.MUNICIPIO).map((row): IndexedBomba => {
+          const date = parseDate(row.DATA_VERIFICACAO);
+          const municipality = row.MUNICIPIO.trim();
+          const searchText = `${row.MUNICIPIO} ${row.RESULTADO} ${row.STATUS_CONSOLIDADO} ${row.PROPRIETARIO} ${row.NUMERO_INMETRO}`.toLocaleLowerCase('pt-BR');
+          const interdictionText = `${row.MUNICIPIO} ${row.PROPRIETARIO} ${row.MARCA} ${row.MODELO} ${row.NUMERO_INMETRO}`.toLocaleLowerCase('pt-BR');
+          return {
+            ...row,
+            _status: getStatus(row),
+            _year: date?.getFullYear() ?? null,
+            _date: date,
+            _normalizedMunicipio: municipality.toLocaleLowerCase('pt-BR'),
+            _auditSearch: searchText,
+            _interdictionSearch: interdictionText,
+          };
+        });
+        setData(rows);
         setLoadError(results.errors.length ? 'A base foi carregada com avisos de leitura.' : '');
         setLoading(false);
       },
@@ -144,35 +200,70 @@ export default function App() {
     });
   }, []);
 
-  const anos = Array.from(new Set(data.map((item) => parseDate(item.DATA_VERIFICACAO)?.getFullYear()).filter((year): year is number => Boolean(year))))
-    .sort((a, b) => b - a);
-  const filtrados = data.filter((item) => {
-    const municipioOk = item.MUNICIPIO?.toLocaleLowerCase('pt-BR').includes(municipioFiltro.toLocaleLowerCase('pt-BR'));
-    const date = parseDate(item.DATA_VERIFICACAO);
-    const anoOk = anoFiltro === 'Todos' || date?.getFullYear() === Number(anoFiltro);
+  const selecionarMunicipiosNoMapa = useCallback((selected: string[]) => {
+    setMunicipioFiltro('');
+    startTransition(() => {
+      setMunicipiosMapaSelecionados(selected);
+      setPagina(0);
+    });
+  }, [startTransition]);
+
+  const anos = useMemo(() => Array.from(new Set(data.map((item) => item._year).filter((year): year is number => year !== null)))
+    .sort((a, b) => b - a), [data]);
+  const municipiosMapaSet = useMemo(() => new Set(municipiosMapaSelecionados), [municipiosMapaSelecionados]);
+  const municipiosBase = useMemo(() => data.filter((item) => {
+    const municipioOk = item._normalizedMunicipio.includes(municipioFiltroDiferido);
+    const anoOk = anoFiltro === 'Todos' || item._year === Number(anoFiltro);
     return municipioOk && anoOk;
-  });
+  }), [data, municipioFiltroDiferido, anoFiltro]);
+  const filtrados = useMemo(() => municipiosMapaSet.size
+    ? municipiosBase.filter((item) => municipiosMapaSet.has(item.MUNICIPIO.trim()))
+    : municipiosBase, [municipiosBase, municipiosMapaSet]);
+  const mapaMunicipios = useMemo(() => {
+    const grouped = new Map<string, MunicipalityPoint>();
+    municipiosBase.forEach((item) => {
+      const municipio = item.MUNICIPIO.trim();
+      const grupo = grouped.get(municipio) ?? { municipio, total: 0, aprovados: 0, reprovados: 0, interditados: 0 };
+      grupo.total += 1;
+      if (item._status === 'Aprovado') grupo.aprovados += 1;
+      if (item._status === 'Reprovado') grupo.reprovados += 1;
+      if (item._status === 'Interditado') grupo.interditados += 1;
+      grouped.set(municipio, grupo);
+    });
+    return Array.from(grouped.values());
+  }, [municipiosBase]);
 
+  const resumo = useMemo(() => {
+    const groups = new Map<string, { municipio: string; total: number; aprovados: number; reprovados: number; interditados: number }>();
+    let aprovados = 0;
+    let reprovados = 0;
+    let interditados = 0;
+    let semClassificacao = 0;
+
+    filtrados.forEach((item) => {
+      const municipio = item.MUNICIPIO.trim();
+      const grupo = groups.get(municipio) ?? { municipio, total: 0, aprovados: 0, reprovados: 0, interditados: 0 };
+      grupo.total += 1;
+      if (item._status === 'Aprovado') { grupo.aprovados += 1; aprovados += 1; }
+      if (item._status === 'Reprovado') { grupo.reprovados += 1; reprovados += 1; }
+      if (item._status === 'Interditado') { grupo.interditados += 1; interditados += 1; }
+      if (item._status === 'Sem classificação') semClassificacao += 1;
+      groups.set(municipio, grupo);
+    });
+
+    return {
+      aprovados,
+      reprovados,
+      interditados,
+      semClassificacao,
+      porMunicipio: groups,
+      municipios: groups.size,
+    };
+  }, [filtrados]);
   const total = filtrados.length;
-  const aprovados = filtrados.filter((item) => getStatus(item) === 'Aprovado').length;
-  const reprovados = filtrados.filter((item) => getStatus(item) === 'Reprovado').length;
-  const interditados = filtrados.filter((item) => getStatus(item) === 'Interditado').length;
-  const semClassificacao = filtrados.filter((item) => getStatus(item) === 'Sem classificação').length;
-  const municipios = new Set(filtrados.map((item) => item.MUNICIPIO)).size;
+  const { aprovados, reprovados, interditados, semClassificacao, municipios, porMunicipio } = resumo;
 
-  const porMunicipio = new Map<string, { municipio: string; total: number; aprovados: number; reprovados: number; interditados: number }>();
-  filtrados.forEach((item) => {
-    const municipio = item.MUNICIPIO?.trim();
-    if (!municipio) return;
-    const grupo = porMunicipio.get(municipio) ?? { municipio, total: 0, aprovados: 0, reprovados: 0, interditados: 0 };
-    const status = getStatus(item);
-    grupo.total += 1;
-    if (status === 'Aprovado') grupo.aprovados += 1;
-    if (status === 'Reprovado') grupo.reprovados += 1;
-    if (status === 'Interditado') grupo.interditados += 1;
-    porMunicipio.set(municipio, grupo);
-  });
-  const ranking = Array.from(porMunicipio.values())
+  const ranking = useMemo(() => Array.from(porMunicipio.values())
     .map((item) => ({ ...item, taxa: item.total ? (item.aprovados / item.total) * 100 : 0 }))
     .sort((a, b) => {
       for (const criterio of ordenacaoRanking) {
@@ -192,29 +283,33 @@ export default function App() {
         if (comparacao !== 0) return criterio.direction === 'desc' ? -comparacao : comparacao;
       }
       return a.municipio.localeCompare(b.municipio, 'pt-BR');
-    });
-  const rankingFiltrado = ranking.filter((item) => item.municipio.toLocaleLowerCase('pt-BR').includes(buscaRanking.toLocaleLowerCase('pt-BR')));
+    }), [porMunicipio, ordenacaoRanking]);
+  const rankingFiltrado = useMemo(() => ranking.filter((item) => item.municipio.toLocaleLowerCase('pt-BR').includes(buscaRankingDiferida)), [ranking, buscaRankingDiferida]);
 
   function alternarCriterioRanking(key: RankingSortKey) {
-    setOrdenacaoRanking((atual) => {
-      const existente = atual.find((criterio) => criterio.key === key);
-      if (existente) {
-        return atual.map((criterio) => criterio.key === key
-          ? { ...criterio, direction: criterio.direction === 'desc' ? 'asc' : 'desc' }
-          : criterio);
-      }
-      return [...atual, { key, direction: key === 'municipio' ? 'asc' : 'desc' }];
+    startTransition(() => {
+      setOrdenacaoRanking((atual) => {
+        const existente = atual.find((criterio) => criterio.key === key);
+        if (existente) {
+          return atual.map((criterio) => criterio.key === key
+            ? { ...criterio, direction: criterio.direction === 'desc' ? 'asc' : 'desc' }
+            : criterio);
+        }
+        return [...atual, { key, direction: key === 'municipio' ? 'asc' : 'desc' }];
+      });
     });
   }
 
   function moverCriterioRanking(key: RankingSortKey, deslocamento: number) {
-    setOrdenacaoRanking((atual) => {
-      const origem = atual.findIndex((criterio) => criterio.key === key);
-      const destino = origem + deslocamento;
-      if (origem < 0 || destino < 0 || destino >= atual.length) return atual;
-      const novaOrdenacao = [...atual];
-      [novaOrdenacao[origem], novaOrdenacao[destino]] = [novaOrdenacao[destino], novaOrdenacao[origem]];
-      return novaOrdenacao;
+    startTransition(() => {
+      setOrdenacaoRanking((atual) => {
+        const origem = atual.findIndex((criterio) => criterio.key === key);
+        const destino = origem + deslocamento;
+        if (origem < 0 || destino < 0 || destino >= atual.length) return atual;
+        const novaOrdenacao = [...atual];
+        [novaOrdenacao[origem], novaOrdenacao[destino]] = [novaOrdenacao[destino], novaOrdenacao[origem]];
+        return novaOrdenacao;
+      });
     });
   }
 
@@ -236,26 +331,31 @@ export default function App() {
     );
   }
 
-  const dadosValeParaiba = filtrados.filter((item) => municipiosValeParaibaNormalizados.has(item.MUNICIPIO?.trim().toLocaleUpperCase('pt-BR')));
-  const existeValeSPNaFonte = data.some((item) => municipiosValeParaibaNormalizados.has(item.MUNICIPIO?.trim().toLocaleUpperCase('pt-BR')));
-  const totalVale = dadosValeParaiba.length;
-  const aprovadosVale = dadosValeParaiba.filter((item) => getStatus(item) === 'Aprovado').length;
-  const reprovadosVale = dadosValeParaiba.filter((item) => getStatus(item) === 'Reprovado').length;
-  const interditadosVale = dadosValeParaiba.filter((item) => getStatus(item) === 'Interditado').length;
-  const municipiosValeEncontrados = new Set(dadosValeParaiba.map((item) => item.MUNICIPIO)).size;
-  const porMunicipioVale = new Map<string, { nome: string; total: number; aprovados: number; reprovados: number; interditados: number }>();
-  municipiosValeParaiba.forEach((nome) => {
-    porMunicipioVale.set(nome.toLocaleUpperCase('pt-BR'), { nome, total: 0, aprovados: 0, reprovados: 0, interditados: 0 });
-  });
-  dadosValeParaiba.forEach((item) => {
-    const grupo = porMunicipioVale.get(item.MUNICIPIO.trim().toLocaleUpperCase('pt-BR'));
-    if (!grupo) return;
-    grupo.total += 1;
-    const status = getStatus(item);
-    if (status === 'Aprovado') grupo.aprovados += 1;
-    if (status === 'Reprovado') grupo.reprovados += 1;
-    if (status === 'Interditado') grupo.interditados += 1;
-  });
+  const existeValeSPNaFonte = useMemo(() => data.some((item) => municipiosValeParaibaNormalizados.has(item.MUNICIPIO.trim().toLocaleUpperCase('pt-BR'))), [data]);
+  const resumoVale = useMemo(() => {
+    const groups = new Map<string, { nome: string; total: number; aprovados: number; reprovados: number; interditados: number }>();
+    municipiosValeParaiba.forEach((nome) => {
+      groups.set(nome.toLocaleUpperCase('pt-BR'), { nome, total: 0, aprovados: 0, reprovados: 0, interditados: 0 });
+    });
+    let total = 0;
+    let aprovados = 0;
+    let reprovados = 0;
+    let interditados = 0;
+
+    filtrados.forEach((item) => {
+      const group = groups.get(item.MUNICIPIO.trim().toLocaleUpperCase('pt-BR'));
+      if (!group) return;
+      total += 1;
+      group.total += 1;
+      if (item._status === 'Aprovado') { aprovados += 1; group.aprovados += 1; }
+      if (item._status === 'Reprovado') { reprovados += 1; group.reprovados += 1; }
+      if (item._status === 'Interditado') { interditados += 1; group.interditados += 1; }
+    });
+
+    return { total, aprovados, reprovados, interditados, groups };
+  }, [filtrados]);
+  const { total: totalVale, aprovados: aprovadosVale, reprovados: reprovadosVale, interditados: interditadosVale, groups: porMunicipioVale } = resumoVale;
+  const municipiosValeEncontrados = Array.from(porMunicipioVale.values()).filter((item) => item.total > 0).length;
   const dadosMunicipioVale = Array.from(porMunicipioVale.values())
     .map((item) => ({ ...item, taxa: item.total ? (item.aprovados / item.total) * 100 : 0 }));
   const rankingMunicipiosVale = [...dadosMunicipioVale].sort((a, b) => b.total - a.total);
@@ -265,57 +365,69 @@ export default function App() {
     { nome: 'Interdição', taxa: Number(totalVale ? (interditadosVale / totalVale) * 100 : 0), quantidade: interditadosVale, cor: '#c44f45' },
   ];
 
-  const porMes = new Map<string, { mes: string; aprovacao: number; reprovacao: number; interdicoes: number; total: number; aprovados: number; reprovados: number; interditados: number }>();
-  filtrados.forEach((item) => {
-    const date = parseDate(item.DATA_VERIFICACAO);
-    if (!date) return;
-    const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-    const grupo = porMes.get(key) ?? {
-      mes: date.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' }),
-      aprovacao: 0,
-      reprovacao: 0,
-      interdicoes: 0,
-      total: 0,
-      aprovados: 0,
-      reprovados: 0,
-      interditados: 0,
-    };
-    grupo.total += 1;
-    if (getStatus(item) === 'Aprovado') grupo.aprovados += 1;
-    if (getStatus(item) === 'Reprovado') grupo.reprovados += 1;
-    if (getStatus(item) === 'Interditado') grupo.interditados += 1;
-    grupo.aprovacao = grupo.total ? (grupo.aprovados / grupo.total) * 100 : 0;
-    grupo.reprovacao = grupo.total ? (grupo.reprovados / grupo.total) * 100 : 0;
-    grupo.interdicoes = grupo.interditados;
-    porMes.set(key, grupo);
-  });
-  const tendencia = Array.from(porMes.entries()).sort(([a], [b]) => a.localeCompare(b)).map(([, value]) => value);
+  const tendencia = useMemo(() => {
+    const byMonth = new Map<string, { mes: string; aprovacao: number; reprovacao: number; interdicoes: number; total: number; aprovados: number; reprovados: number; interditados: number }>();
+    filtrados.forEach((item) => {
+      const date = item._date;
+      if (!date) return;
+      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      const group = byMonth.get(key) ?? {
+        mes: date.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' }),
+        aprovacao: 0,
+        reprovacao: 0,
+        interdicoes: 0,
+        total: 0,
+        aprovados: 0,
+        reprovados: 0,
+        interditados: 0,
+      };
+      group.total += 1;
+      if (item._status === 'Aprovado') group.aprovados += 1;
+      if (item._status === 'Reprovado') group.reprovados += 1;
+      if (item._status === 'Interditado') group.interditados += 1;
+      group.aprovacao = (group.aprovados / group.total) * 100;
+      group.reprovacao = (group.reprovados / group.total) * 100;
+      group.interdicoes = group.interditados;
+      byMonth.set(key, group);
+    });
+    return Array.from(byMonth.entries()).sort(([a], [b]) => a.localeCompare(b)).map(([, value]) => value);
+  }, [filtrados]);
 
-  const listaInterdicoes = filtrados.filter((item) => getStatus(item) === 'Interditado');
-  const listaInterdicoesFiltrada = listaInterdicoes.filter((item) => `${item.MUNICIPIO} ${item.PROPRIETARIO} ${item.MARCA} ${item.MODELO} ${item.NUMERO_INMETRO}`.toLocaleLowerCase('pt-BR').includes(buscaInterdicoes.toLocaleLowerCase('pt-BR')));
-  const registrosAuditoria = filtrados.filter((item) => `${item.MUNICIPIO} ${item.RESULTADO} ${item.STATUS_CONSOLIDADO} ${item.PROPRIETARIO} ${item.NUMERO_INMETRO}`.toLocaleLowerCase('pt-BR').includes(buscaAuditoria.toLocaleLowerCase('pt-BR')));
-  const municipiosUnicos = Array.from(new Set(data.map((item) => item.MUNICIPIO?.trim()).filter(Boolean))).sort((a, b) => a.localeCompare(b, 'pt-BR'));
-  const dadosComparacaoAno = data.filter((item) => {
-    const date = parseDate(item.DATA_VERIFICACAO);
-    return anoFiltro === 'Todos' || date?.getFullYear() === Number(anoFiltro);
-  });
-  const comparacaoMunicipios = municipiosComparacao.map((municipio) => {
-    const registros = dadosComparacaoAno.filter((item) => item.MUNICIPIO?.trim() === municipio);
-    const aprovadosMunicipio = registros.filter((item) => getStatus(item) === 'Aprovado').length;
-    const reprovadosMunicipio = registros.filter((item) => getStatus(item) === 'Reprovado').length;
-    const interditadosMunicipio = registros.filter((item) => getStatus(item) === 'Interditado').length;
-    const totalMunicipio = registros.length;
-    return {
-      municipio,
-      total: totalMunicipio,
-      aprovados: aprovadosMunicipio,
-      reprovados: reprovadosMunicipio,
-      interditados: interditadosMunicipio,
-      aprovacao: totalMunicipio ? (aprovadosMunicipio / totalMunicipio) * 100 : 0,
-      reprovacao: totalMunicipio ? (reprovadosMunicipio / totalMunicipio) * 100 : 0,
-      interdicao: totalMunicipio ? (interditadosMunicipio / totalMunicipio) * 100 : 0,
-    };
-  });
+  const listaInterdicoes = useMemo(() => filtrados.filter((item) => item._status === 'Interditado'), [filtrados]);
+  const listaInterdicoesFiltrada = useMemo(() => listaInterdicoes.filter((item) => item._interdictionSearch.includes(buscaInterdicoesDiferida)), [listaInterdicoes, buscaInterdicoesDiferida]);
+  const registrosAuditoria = useMemo(() => filtrados.filter((item) => item._auditSearch.includes(buscaAuditoriaDiferida)), [filtrados, buscaAuditoriaDiferida]);
+  const municipiosUnicos = useMemo(() => Array.from(new Set(data.map((item) => item.MUNICIPIO.trim()))).sort((a, b) => a.localeCompare(b, 'pt-BR')), [data]);
+  const comparacaoMunicipios = useMemo(() => {
+    const selected = new Set(municipiosComparacao);
+    const groups = new Map<string, { aprovados: number; reprovados: number; interditados: number; total: number }>();
+    municipiosComparacao.forEach((municipio) => groups.set(municipio, { aprovados: 0, reprovados: 0, interditados: 0, total: 0 }));
+    data.forEach((item) => {
+      if ((anoFiltro !== 'Todos' && item._year !== Number(anoFiltro)) || !selected.has(item.MUNICIPIO.trim())) return;
+      const group = groups.get(item.MUNICIPIO.trim());
+      if (!group) return;
+      group.total += 1;
+      if (item._status === 'Aprovado') group.aprovados += 1;
+      if (item._status === 'Reprovado') group.reprovados += 1;
+      if (item._status === 'Interditado') group.interditados += 1;
+    });
+    return municipiosComparacao.map((municipio) => {
+      const group = groups.get(municipio);
+      const total = group?.total ?? 0;
+      const aprovados = group?.aprovados ?? 0;
+      const reprovados = group?.reprovados ?? 0;
+      const interditados = group?.interditados ?? 0;
+      return {
+        municipio,
+        total,
+        aprovados,
+        reprovados,
+        interditados,
+        aprovacao: total ? (aprovados / total) * 100 : 0,
+        reprovacao: total ? (reprovados / total) * 100 : 0,
+        interdicao: total ? (interditados / total) * 100 : 0,
+      };
+    });
+  }, [data, anoFiltro, municipiosComparacao]);
   const comparacaoMunicipiosComDados = comparacaoMunicipios.filter((item) => item.total > 0);
   const dadosPizza = [
     { nome: 'Aprovadas', valor: aprovados, cor: '#16835d' },
@@ -335,10 +447,17 @@ export default function App() {
   const inicio = pagina * pageSize;
   const paginas = Math.max(1, Math.ceil(registrosAuditoria.length / pageSize));
   const registrosPagina = registrosAuditoria.slice(inicio, inicio + pageSize);
-  const primeiroRegistro = data.map((item) => parseDate(item.DATA_VERIFICACAO)).filter((date): date is Date => Boolean(date)).sort((a, b) => a.getTime() - b.getTime())[0];
-  const ultimoRegistro = data.map((item) => parseDate(item.DATA_VERIFICACAO)).filter((date): date is Date => Boolean(date)).sort((a, b) => b.getTime() - a.getTime())[0];
+  const { primeiroRegistro, ultimoRegistro } = useMemo(() => {
+    const dates = data.flatMap((item) => item._date ? [item._date] : []).sort((a, b) => a.getTime() - b.getTime());
+    return { primeiroRegistro: dates[0], ultimoRegistro: dates[dates.length - 1] };
+  }, [data]);
 
-  if (loading) return <main className="loading">Carregando dados do IPEM-SP...</main>;
+  if (loading) return (
+    <main className="loading" role="status" aria-live="polite">
+      <span className="loading-spinner" aria-hidden="true" />
+      <span>Carregando arquivo de dados do IPEM-SP...</span>
+    </main>
+  );
 
   return (
     <main className="dashboard">
@@ -354,30 +473,59 @@ export default function App() {
           <label className="search-field">
             <Search size={17} />
             <span className="sr-only">Filtrar município</span>
-            <input value={municipioFiltro} onChange={(event) => { setMunicipioFiltro(event.target.value); setPagina(0); }} placeholder="Buscar município" />
+            <input value={municipioFiltro} onChange={(event) => {
+              setMunicipioFiltro(event.target.value);
+              setMunicipiosMapaSelecionados((selected) => selected.length ? [] : selected);
+              setPagina(0);
+            }} placeholder="Buscar município" />
           </label>
           <div className="municipality-guide">
-            <button className="guide-button" aria-expanded={mostrarMunicipios} onClick={() => setMostrarMunicipios(!mostrarMunicipios)}>
+            <button className="guide-button" aria-expanded={mostrarMunicipios} onClick={() => startTransition(() => setMostrarMunicipios(!mostrarMunicipios))}>
               <MapPin size={15} /> Municípios <ChevronDown size={14} />
             </button>
             {mostrarMunicipios && <div className="municipality-popover">
               <div className="popover-heading"><strong>Municípios disponíveis</strong><span>{municipiosUnicos.length}</span></div>
               <p>Selecione um nome para aplicar o filtro.</p>
               <div className="municipality-list">
-                {municipiosUnicos.map((municipio) => <button key={municipio} onClick={() => { setMunicipioFiltro(municipio); setPagina(0); setMostrarMunicipios(false); }}>{municipio}</button>)}
+                {municipiosUnicos.map((municipio) => <button key={municipio} onClick={() => {
+                  setMostrarMunicipios(false);
+                  startTransition(() => {
+                    setMunicipioFiltro(municipio);
+                    setMunicipiosMapaSelecionados([]);
+                    setPagina(0);
+                  });
+                }}>{municipio}</button>)}
               </div>
             </div>}
           </div>
           <label className="year-field">
             <span className="sr-only">Filtrar ano</span>
-            <select value={anoFiltro} onChange={(event) => { setAnoFiltro(event.target.value); setPagina(0); }}>
+            <select value={anoFiltro} onChange={(event) => {
+              const year = event.target.value;
+              startTransition(() => {
+                setAnoFiltro(year);
+                setPagina(0);
+              });
+            }}>
               <option>Todos</option>
               {anos.map((ano) => <option key={ano}>{ano}</option>)}
             </select>
           </label>
-          {(municipioFiltro || anoFiltro !== 'Todos') && <button className="clear-button" onClick={() => { setMunicipioFiltro(''); setAnoFiltro('Todos'); setPagina(0); }}>Limpar</button>}
+          {(municipioFiltro || anoFiltro !== 'Todos' || municipiosMapaSelecionados.length > 0) && <button className="clear-button" onClick={() => {
+            setMunicipioFiltro('');
+            startTransition(() => {
+              setAnoFiltro('Todos');
+              setMunicipiosMapaSelecionados([]);
+              setPagina(0);
+            });
+          }}>Limpar</button>}
         </div>
       </header>
+
+      {showUpdating && <div className="updating-indicator" role="status" aria-live="polite">
+        <span className="updating-spinner" aria-hidden="true" />
+        Atualizando dados...
+      </div>}
 
       {loadError && <div className="notice notice-warn"><TriangleAlert size={17} />{loadError}</div>}
      
@@ -410,6 +558,24 @@ export default function App() {
           <strong>{formatNumber(total)}</strong>
           <small>{municipioFiltro || 'Todos os municípios'}</small>
         </article>
+      </section>
+
+      <section className="panel map-panel">
+        <div className="panel-heading map-heading">
+          <div><p className="eyebrow">EXPLORAÇÃO GEOGRÁFICA</p><h3>Fiscalizações pelo Brasil</h3></div>
+          <div className="map-heading-actions">
+            <span className="count-pill region-pill">{formatNumber(mapaMunicipios.length)} municípios · {formatNumber(mapaMunicipios.reduce((sum, item) => sum + item.total, 0))} bombas</span>
+            {municipiosMapaSelecionados.length > 0 && <button type="button" className="map-clear-button" onClick={() => selecionarMunicipiosNoMapa([])}>Limpar seleção</button>}
+          </div>
+        </div>
+        <Suspense fallback={<div className="fuel-map-loading">Preparando mapa interativo...</div>}>
+          <FuelMap
+            points={mapaMunicipios}
+            selectedMunicipalities={municipiosMapaSelecionados}
+            onSelectMunicipalities={selecionarMunicipiosNoMapa}
+          />
+        </Suspense>
+        <p className="map-data-note">A base não informa o endereço nem as coordenadas de cada bomba. Os marcadores representam o volume por município e ficam posicionados aproximadamente no centro da cidade.</p>
       </section>
 
       <section className="chart-grid">
@@ -453,8 +619,8 @@ export default function App() {
               </ResponsiveContainer>}
             </div>
             <div className="distribution-controls" role="group" aria-label="Tipo de gráfico da distribuição">
-              <button type="button" className={graficoDistribuicao === 'pie' ? 'is-active' : ''} aria-label="Gráfico de pizza" aria-pressed={graficoDistribuicao === 'pie'} title="Gráfico de pizza" onClick={() => setGraficoDistribuicao('pie')}><ChartPie size={17} /></button>
-              <button type="button" className={graficoDistribuicao === 'bar' ? 'is-active' : ''} aria-label="Gráfico de barras" aria-pressed={graficoDistribuicao === 'bar'} title="Gráfico de barras" onClick={() => setGraficoDistribuicao('bar')}><ChartNoAxesColumnIncreasing size={17} /></button>
+              <button type="button" className={graficoDistribuicao === 'pie' ? 'is-active' : ''} aria-label="Gráfico de pizza" aria-pressed={graficoDistribuicao === 'pie'} title="Gráfico de pizza" onClick={() => startTransition(() => setGraficoDistribuicao('pie'))}><ChartPie size={17} /></button>
+              <button type="button" className={graficoDistribuicao === 'bar' ? 'is-active' : ''} aria-label="Gráfico de barras" aria-pressed={graficoDistribuicao === 'bar'} title="Gráfico de barras" onClick={() => startTransition(() => setGraficoDistribuicao('bar'))}><ChartNoAxesColumnIncreasing size={17} /></button>
             </div>
           </div>
           <div className="pie-legend">{dadosPizza.map((item) => <div key={item.nome}><span><i style={{ backgroundColor: item.cor }} />{item.nome}</span><strong>{formatNumber(item.valor)} <small>{percent(item.valor, total)}</small></strong></div>)}</div>
@@ -468,9 +634,9 @@ export default function App() {
         </div>
         {totalVale ? <div className="region-content">
           <div className="region-switcher" role="group" aria-label="Gráficos do Vale do Paraíba">
-            <button type="button" className={graficoRegional === 'rates' ? 'is-active' : ''} aria-label="Taxas de conformidade" aria-pressed={graficoRegional === 'rates'} title="Taxas de conformidade" onClick={() => setGraficoRegional('rates')}><ChartNoAxesColumnIncreasing size={17} /></button>
-            <button type="button" className={graficoRegional === 'results' ? 'is-active' : ''} aria-label="Composição dos resultados" aria-pressed={graficoRegional === 'results'} title="Composição dos resultados" onClick={() => setGraficoRegional('results')}><ChartPie size={17} /></button>
-            <button type="button" className={graficoRegional === 'municipalities' ? 'is-active' : ''} aria-label="Volume por município" aria-pressed={graficoRegional === 'municipalities'} title="Volume por município" onClick={() => setGraficoRegional('municipalities')}><MapPin size={17} /></button>
+            <button type="button" className={graficoRegional === 'rates' ? 'is-active' : ''} aria-label="Taxas de conformidade" aria-pressed={graficoRegional === 'rates'} title="Taxas de conformidade" onClick={() => startTransition(() => setGraficoRegional('rates'))}><ChartNoAxesColumnIncreasing size={17} /></button>
+            <button type="button" className={graficoRegional === 'results' ? 'is-active' : ''} aria-label="Composição dos resultados" aria-pressed={graficoRegional === 'results'} title="Composição dos resultados" onClick={() => startTransition(() => setGraficoRegional('results'))}><ChartPie size={17} /></button>
+            <button type="button" className={graficoRegional === 'municipalities' ? 'is-active' : ''} aria-label="Volume por município" aria-pressed={graficoRegional === 'municipalities'} title="Volume por município" onClick={() => startTransition(() => setGraficoRegional('municipalities'))}><MapPin size={17} /></button>
           </div>
           <div className="region-chart">
             {graficoRegional === 'results' ? <ResponsiveContainer width="100%" height="100%">
@@ -512,7 +678,7 @@ export default function App() {
           <div><p className="eyebrow">ABRANGÊNCIA TERRITORIAL</p><h3>Municípios do Vale do Paraíba</h3></div>
           <div className="table-tools">
             <span className="count-pill region-pill">{municipiosValeParaiba.length} listados · {municipiosValeEncontrados} com dados</span>
-            <button type="button" className="collapse-toggle" aria-expanded={municipiosValeExpandido} onClick={() => setMunicipiosValeExpandido(!municipiosValeExpandido)}>
+            <button type="button" className="collapse-toggle" aria-expanded={municipiosValeExpandido} onClick={() => startTransition(() => setMunicipiosValeExpandido(!municipiosValeExpandido))}>
               {municipiosValeExpandido ? 'Recolher' : 'Mostrar lista'}<ChevronDown size={15} />
             </button>
           </div>
@@ -554,7 +720,8 @@ export default function App() {
             disabled={!municipioComparacaoSelecionado || municipiosComparacao.length >= 5}
             onClick={() => {
               if (municipioComparacaoSelecionado && !municipiosComparacao.includes(municipioComparacaoSelecionado)) {
-                setMunicipiosComparacao((atual) => [...atual, municipioComparacaoSelecionado]);
+                const municipio = municipioComparacaoSelecionado;
+                startTransition(() => setMunicipiosComparacao((atual) => [...atual, municipio]));
                 setMunicipioComparacaoSelecionado('');
               }
             }}
@@ -566,7 +733,7 @@ export default function App() {
           {municipiosComparacao.map((municipio) => (
             <li key={municipio}>
               <span>{municipio}</span>
-              <button type="button" aria-label={`Remover ${municipio} da comparação`} onClick={() => setMunicipiosComparacao((atual) => atual.filter((item) => item !== municipio))}><X size={14} /></button>
+              <button type="button" aria-label={`Remover ${municipio} da comparação`} onClick={() => startTransition(() => setMunicipiosComparacao((atual) => atual.filter((item) => item !== municipio)))}><X size={14} /></button>
             </li>
           ))}
         </ul>}
@@ -627,7 +794,7 @@ export default function App() {
                 <span className="sort-divider" />
                 <button type="button" className="sort-priority-button" onClick={() => moverCriterioRanking(criterio.key, -1)} disabled={index === 0} aria-label={`Aumentar prioridade de ${rankingSortOptions.find((opcao) => opcao.key === criterio.key)?.label}`}><ArrowUp size={13} /></button>
                 <button type="button" className="sort-priority-button" onClick={() => moverCriterioRanking(criterio.key, 1)} disabled={index === ordenacaoRanking.length - 1} aria-label={`Diminuir prioridade de ${rankingSortOptions.find((opcao) => opcao.key === criterio.key)?.label}`}><ArrowDown size={13} /></button>
-                <button type="button" className="sort-remove-button" onClick={() => setOrdenacaoRanking((atual) => atual.filter((item) => item.key !== criterio.key))} aria-label={`Remover ${rankingSortOptions.find((opcao) => opcao.key === criterio.key)?.label}`}><X size={13} /></button>
+                <button type="button" className="sort-remove-button" onClick={() => startTransition(() => setOrdenacaoRanking((atual) => atual.filter((item) => item.key !== criterio.key)))} aria-label={`Remover ${rankingSortOptions.find((opcao) => opcao.key === criterio.key)?.label}`}><X size={13} /></button>
               </li>
             ))}
           </ol>
@@ -640,7 +807,7 @@ export default function App() {
             onChange={(event) => {
               const key = rankingSortOptions.find((opcao) => opcao.key === event.target.value)?.key;
               if (key && !ordenacaoRanking.some((criterio) => criterio.key === key)) {
-                setOrdenacaoRanking((atual) => [...atual, { key, direction: key === 'municipio' ? 'asc' : 'desc' }]);
+                startTransition(() => setOrdenacaoRanking((atual) => [...atual, { key, direction: key === 'municipio' ? 'asc' : 'desc' }]));
               }
             }}
           >
@@ -675,7 +842,7 @@ export default function App() {
           <div><p className="eyebrow">CASOS GRAVES</p><h3>Bombas interditadas <span className="count-pill">{formatNumber(listaInterdicoesFiltrada.length)} / {formatNumber(listaInterdicoes.length)}</span></h3></div>
           <div className="table-tools">
             <label className="search-field compact-search"><Search size={15} /><span className="sr-only">Buscar interdições</span><input value={buscaInterdicoes} onChange={(event) => setBuscaInterdicoes(event.target.value)} placeholder="Município, posto ou bomba" /></label>
-            <button type="button" className="collapse-toggle" aria-expanded={interdicoesExpandidas} onClick={() => setInterdicoesExpandidas(!interdicoesExpandidas)}>
+            <button type="button" className="collapse-toggle" aria-expanded={interdicoesExpandidas} onClick={() => startTransition(() => setInterdicoesExpandidas(!interdicoesExpandidas))}>
               {interdicoesExpandidas ? 'Recolher' : 'Mostrar lista'}<ChevronDown size={15} />
             </button>
           </div>
@@ -699,7 +866,7 @@ export default function App() {
             <label className="search-field compact-search"><Search size={15} /><span className="sr-only">Buscar nos registros</span><input value={buscaAuditoria} onChange={(event) => { setBuscaAuditoria(event.target.value); setPagina(0); }} placeholder="Município, resultado ou Inmetro" /></label>
             <span className="count-pill region-pill">{formatNumber(registrosAuditoria.length)} registros</span>
             <span className="source-tag"><Check size={15} /> CSV carregado</span>
-            <button type="button" className="collapse-toggle" aria-expanded={auditoriaExpandida} onClick={() => setAuditoriaExpandida(!auditoriaExpandida)}>
+            <button type="button" className="collapse-toggle" aria-expanded={auditoriaExpandida} onClick={() => startTransition(() => setAuditoriaExpandida(!auditoriaExpandida))}>
               {auditoriaExpandida ? 'Recolher' : 'Mostrar lista'}<ChevronDown size={15} />
             </button>
           </div>
@@ -708,19 +875,19 @@ export default function App() {
         <div className="audit-summary">
           <span>Registros no recorte <strong>{formatNumber(total)}</strong></span>
           <span>Período da base <strong>{primeiroRegistro?.toLocaleDateString('pt-BR')} – {ultimoRegistro?.toLocaleDateString('pt-BR')}</strong></span>
-          <span>Sem classificação <strong>{formatNumber(filtrados.filter((item) => getStatus(item) === 'Sem classificação').length)}</strong></span>
+          <span>Sem classificação <strong>{formatNumber(semClassificacao)}</strong></span>
         </div>
         <div className="table-scroll">
           <table>
             <thead><tr><th>Município</th><th>Data</th><th>Resultado</th><th>Status consolidado</th><th>Posto / proprietário</th><th>Nº Inmetro</th></tr></thead>
             <tbody>{registrosPagina.map((item, index) => <tr key={`${item.NUMERO_INMETRO}-${item.DATA_VERIFICACAO}-${inicio + index}`}>
-              <td>{item.MUNICIPIO}</td><td>{item.DATA_VERIFICACAO || '—'}</td><td>{item.RESULTADO || '—'}</td><td><span className={`status status-${getStatus(item).toLocaleLowerCase('pt-BR').replaceAll(' ', '-')}`}>{getStatus(item)}</span></td><td>{item.PROPRIETARIO || '—'}</td><td>{item.NUMERO_INMETRO || '—'}</td>
+              <td>{item.MUNICIPIO}</td><td>{item.DATA_VERIFICACAO || '—'}</td><td>{item.RESULTADO || '—'}</td>              <td><span className={`status status-${item._status.toLocaleLowerCase('pt-BR').replaceAll(' ', '-')}`}>{item._status}</span></td><td>{item.PROPRIETARIO || '—'}</td><td>{item.NUMERO_INMETRO || '—'}</td>
             </tr>)}</tbody>
           </table>
         </div>
         <div className="pagination">
           <span>Exibindo {registrosAuditoria.length ? formatNumber(inicio + 1) : 0}–{formatNumber(Math.min(inicio + pageSize, registrosAuditoria.length))} de {formatNumber(registrosAuditoria.length)}</span>
-          <div><button disabled={pagina === 0} onClick={() => setPagina(pagina - 1)}>Anterior</button><span>Página {pagina + 1} de {paginas}</span><button disabled={pagina + 1 >= paginas} onClick={() => setPagina(pagina + 1)}>Próxima</button></div>
+          <div><button disabled={pagina === 0} onClick={() => startTransition(() => setPagina(pagina - 1))}>Anterior</button><span>Página {pagina + 1} de {paginas}</span><button disabled={pagina + 1 >= paginas} onClick={() => startTransition(() => setPagina(pagina + 1))}>Próxima</button></div>
         </div>
         </>}
       </section>
