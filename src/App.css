@@ -47,6 +47,9 @@
 .search-field input::placeholder { color: #929a93; }
 .year-field select { min-width: 96px; padding: 0 10px; font-size: 13px; }
 .clear-button { padding: 8px 10px; color: #5c665f; background: transparent; border: 0; cursor: pointer; font-size: 12px; }
+.export-button { display: inline-flex; height: 38px; flex: 0 0 auto; align-items: center; justify-content: center; gap: 6px; padding: 0 10px; color: #fff; background: #167d59; border: 1px solid #167d59; border-radius: 5px; cursor: pointer; font-size: 12px !important; white-space: nowrap; }
+.export-button:hover:not(:disabled) { background: #126b4b; border-color: #126b4b; }
+.export-button:disabled { color: #8a938b; background: #edf0ec; border-color: #dce1da; cursor: default; }
 .summary-line { display: flex; align-items: end; justify-content: space-between; padding: 24px 0 15px; }
 .summary-line h2 { margin: 0; color: var(--ink); font-size: 21px; line-height: 1.2; font-weight: 650; letter-spacing: 0; }
 .scope-note { color: #6e776f; font-size: 12px; }
@@ -258,8 +261,8 @@ tbody tr:last-child td { border-bottom: 0; }
   .dashboard { padding: 16px 13px; }
   .updating-indicator { top: 8px; }
   .topbar { align-items: flex-start; flex-direction: column; gap: 16px; padding-bottom: 16px; }
-  .filterbar { width: 100%; justify-content: flex-start; }
-  .search-field { flex: 1; width: auto; }
+  .filterbar { width: 100%; flex-wrap: wrap; justify-content: flex-start; }
+  .search-field { flex: 1 1 190px; width: auto; }
   .municipality-guide { flex: 0 0 auto; }
   .guide-button { padding: 0 7px; }
   .municipality-popover { right: auto; left: 0; width: min(280px, calc(100vw - 28px)); }
