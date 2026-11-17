@@ -12,6 +12,7 @@ import {
   Check,
   ChevronDown,
   ClipboardCheck,
+  Download,
   Fuel,
   MapPin,
   Plus,
@@ -119,6 +120,51 @@ function percent(value: number, total: number) {
 
 function formatNumber(value: number) {
   return value.toLocaleString('pt-BR');
+}
+
+function exportarCsv(registros: IndexedBomba[]) {
+  const fields = [
+    'MUNICIPIO',
+    'BAIRRO',
+    'PROPRIETARIO',
+    'DESCRICAO',
+    'MARCA',
+    'MODELO',
+    'NUMERO_INMETRO',
+    'NUMERO_SERIE',
+    'DATA_VERIFICACAO',
+    'RESULTADO',
+    'STATUS_CONSOLIDADO',
+    'SITUACAO',
+  ];
+  const csv = Papa.unparse({
+    fields,
+    data: registros.map((item) => [
+      item.MUNICIPIO,
+      item.BAIRRO,
+      item.PROPRIETARIO,
+      item.DESCRICAO,
+      item.MARCA,
+      item.MODELO,
+      item.NUMERO_INMETRO,
+      item.NUMERO_SERIE,
+      item.DATA_VERIFICACAO,
+      item.RESULTADO,
+      item.STATUS_CONSOLIDADO,
+      item._status,
+    ]),
+  }, {
+    delimiter: ';',
+    newline: '\r\n',
+    escapeFormulae: true,
+  });
+  const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'dados-combustiveis-filtrados.csv';
+  link.click();
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 export default function App() {
@@ -519,6 +565,16 @@ export default function App() {
               setPagina(0);
             });
           }}>Limpar</button>}
+          <button
+            type="button"
+            className="export-button"
+            onClick={() => exportarCsv(filtrados)}
+            disabled={!filtrados.length || isUpdating}
+            title={`${formatNumber(filtrados.length)} registros no arquivo`}
+          >
+            <Download size={15} />
+            Exportar CSV
+          </button>
         </div>
       </header>
 
