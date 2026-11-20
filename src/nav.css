@@ -1,0 +1,237 @@
+
+
+.dashboard .topbar { padding: 1px 0 16px; border-bottom: 0; }
+
+
+
+.dashboard section[id] { scroll-margin-top: 64px; }
+
+.section-nav {
+  position: sticky;
+  z-index: 900;
+  top: 0;
+  display: flex;
+  gap: 6px;
+  margin: 0 -38px 8px;
+  padding: 9px 38px;
+  overflow-x: auto;
+  background: rgba(243, 245, 241, .96);
+  border-top: 1px solid #d8ddd6;
+  border-bottom: 1px solid #d8ddd6;
+  scrollbar-width: none;
+}
+.section-nav::-webkit-scrollbar { display: none; }
+
+.dashboard .section-nav button {
+  flex: 0 0 auto;
+  padding: 7px 13px;
+  color: #4c5c50;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 16px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.dashboard .section-nav button:hover { background: #e9efe9; }
+.dashboard .section-nav button.is-active {
+  color: #126e4d;
+  background: #e2f0e5;
+  border-color: #c9dccb;
+}
+
+/* ---------- 1) RESUMO: o que a pessoa lê primeiro ---------- */
+
+.resumo { padding: 30px 0 22px; }
+.resumo .eyebrow { margin-bottom: 10px; }
+
+.resumo-title {
+  max-width: 880px;
+  margin: 0;
+  color: var(--ink);
+  font-size: clamp(28px, 4.4vw, 46px);
+  font-weight: 750;
+  line-height: 1.1;
+  letter-spacing: -.02em;
+}
+.resumo-number { color: #16835d; }
+
+.resumo-sub { max-width: 640px; margin: 14px 0 0; color: #5d675f; font-size: 15px; line-height: 1.55; }
+
+.resumo-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 22px; }
+
+.resumo-search {
+  display: flex;
+  flex: 1 1 320px;
+  max-width: 520px;
+  align-items: center;
+  gap: 10px;
+  height: 54px;
+  padding: 0 16px;
+  color: #555e57;
+  background: #fff;
+  border: 2px solid #16835d;
+  border-radius: 10px;
+  box-shadow: 0 6px 18px rgba(22, 131, 93, .12);
+}
+.resumo-search:focus-within { box-shadow: 0 0 0 4px rgba(22, 131, 93, .2); }
+.resumo-search svg { flex: 0 0 auto; color: #16835d; }
+.resumo-search input { width: 100%; min-width: 0; padding: 0; color: var(--ink); background: transparent; border: 0; outline: 0; font-size: 16px !important; }
+.resumo-search input::placeholder { color: #8b948d; }
+
+.resumo-year select {
+  height: 54px;
+  min-width: 140px;
+  padding: 0 12px;
+  color: var(--ink);
+  background: #fff;
+  border: 1px solid #dce1da;
+  border-radius: 10px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.resumo-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 14px; color: #6e776f; font-size: 12px; }
+.dashboard .resumo-chips button {
+  padding: 6px 12px;
+  color: #286849;
+  background: #edf5ef;
+  border: 1px solid #d5e5d7;
+  border-radius: 16px;
+  cursor: pointer;
+  font-size: 12px;
+}
+.dashboard .resumo-chips button:hover { background: #e2f0e5; }
+
+/* ---------- 2) NÚMEROS PRINCIPAIS (clicáveis) ---------- */
+
+.dashboard .kpi-grid { gap: 14px; margin-bottom: 22px; }
+
+.dashboard .kpi {
+  display: block;
+  width: 100%;
+  min-height: 0;
+  padding: 18px 19px 15px;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+  transition: transform 140ms ease, box-shadow 140ms ease;
+}
+.dashboard .kpi:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(34, 52, 39, .12); }
+.dashboard .kpi:focus-visible { outline: 3px solid #16835d; outline-offset: 2px; }
+.dashboard .kpi strong { margin-top: 14px; font-size: 40px; letter-spacing: -.02em; }
+.dashboard .kpi small { margin-top: 8px; font-size: 12px; }
+
+.kpi-bar { display: block; height: 6px; margin-top: 14px; overflow: hidden; background: #edf0ec; border-radius: 4px; }
+.kpi-bar i { display: block; height: 100%; border-radius: 4px; }
+.kpi-green .kpi-bar i { background: #16835d; }
+.kpi-amber .kpi-bar i { background: #c47a19; }
+.kpi-red .kpi-bar i { background: #c44f45; }
+.kpi-ink .kpi-bar i { background: #67746a; }
+.kpi-link { display: block; margin-top: 10px; color: #286849; font-size: 12px; font-weight: 650; }
+
+/* ---------- TÍTULOS E TEXTO DE APOIO DAS SEÇÕES ---------- */
+
+.dashboard .panel { margin-bottom: 22px; padding: 22px 24px; }
+.dashboard .panel-heading h3 { font-size: 20px; letter-spacing: -.01em; }
+.dashboard .panel-heading .eyebrow::before {
+  display: inline-block;
+  width: 16px;
+  height: 3px;
+  margin-right: 8px;
+  vertical-align: middle;
+  background: #16835d;
+  border-radius: 2px;
+  content: '';
+}
+
+.section-lead { max-width: 760px; margin: -4px 0 14px; color: #6e776f; font-size: 13px; line-height: 1.5; }
+
+/* botões de "ver mais": bem visíveis */
+.dashboard .collapse-toggle { min-height: 38px; padding: 0 14px; color: #286849; background: #fff; border: 1.5px solid #16835d; font-size: 12px; font-weight: 650; }
+.dashboard .collapse-toggle:hover { color: #fff; background: #16835d; }
+.table-more { display: flex; justify-content: center; padding-top: 12px; }
+
+/* ---------- 3) MAPA: grande ---------- */
+
+.dashboard .fuel-map-canvas { height: min(64vh, 560px); }
+
+/* ---------- 4) INTERDITADAS: destaque em vermelho ---------- */
+
+.dashboard .interdiction-panel { border-left: 4px solid #c44f45; }
+.dashboard .interdiction-panel .eyebrow { color: #a84239; }
+.dashboard .interdiction-panel .panel-heading .eyebrow::before { background: #c44f45; }
+.dashboard .interdiction-panel table { min-width: 720px; }
+
+/* ---------- 5) EVOLUÇÃO: largura toda ---------- */
+
+.dashboard .trend-chart { height: 340px; }
+
+/* ---------- 6) COMPARAR e 7) DADOS: mais discretos ---------- */
+
+.dashboard .municipality-comparison-panel .panel-heading h3,
+.dashboard .audit-panel .panel-heading h3 { font-size: 16px; }
+.dashboard .municipality-comparison-panel,
+.dashboard .audit-panel { background: #fbfcfa; }
+
+.dados-group { margin-top: 30px; }
+.dados-group::before {
+  display: block;
+  margin-bottom: 14px;
+  color: #718077;
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 1px;
+  content: 'DADOS DE APOIO';
+}
+
+
+/* tabela de cidades do Vale: altura limitada, cabeçalho fixo */
+.dashboard .region-municipality-panel .table-scroll { max-height: 420px; border: 1px solid #e5e9e3; border-radius: 4px; }
+.dashboard .region-municipality-panel th { position: sticky; top: 0; z-index: 1; }
+
+/* ---------- BOTÃO VOLTAR AO TOPO ---------- */
+
+.dashboard .back-to-top {
+  position: fixed;
+  z-index: 1500;
+  right: 22px;
+  bottom: 22px;
+  display: grid;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  place-items: center;
+  color: #fff;
+  background: #167d59;
+  border: 0;
+  border-radius: 50%;
+  box-shadow: 0 4px 14px rgba(34, 52, 39, .28);
+  cursor: pointer;
+}
+.dashboard .back-to-top:hover { background: #126b4b; }
+
+/* ---------- RESPONSIVO ---------- */
+
+@media (max-width: 900px) {
+  .section-nav { margin: 0 -22px 8px; padding: 9px 22px; }
+  .dashboard .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 650px) {
+  .section-nav { margin: 0 -13px 6px; padding: 8px 13px; }
+  .dashboard section[id] { scroll-margin-top: 54px; }
+  .resumo { padding: 20px 0 16px; }
+  .resumo-search { flex-basis: 100%; max-width: none; height: 50px; }
+  .resumo-year { flex: 1 1 140px; }
+  .resumo-year select { width: 100%; height: 48px; }
+  .dashboard .kpi-grid { gap: 8px; }
+  .dashboard .kpi { padding: 13px 13px 11px; }
+  .dashboard .kpi strong { margin-top: 10px; font-size: 28px; }
+  .kpi-link { display: none; }
+  .dashboard .panel { padding: 16px 14px; }
+  .dashboard .panel-heading h3 { font-size: 18px; }
+  .dashboard .trend-chart { height: 260px; }
+  .dashboard .back-to-top { right: 14px; bottom: 14px; }
+}
