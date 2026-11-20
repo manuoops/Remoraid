@@ -124,6 +124,11 @@ function FuelMap({ points, selectedMunicipalities, onSelectMunicipalities }: Fue
   }), [points]);
   const mappedPointsByName = useMemo(() => new Map(mappedPoints.map((point) => [normalize(point.municipio), point])), [mappedPoints]);
 
+  // Área que cobre todos os municípios com dados. O mapa abre já enquadrado nela.
+  const frameBounds = useMemo(() => mappedPoints.length
+    ? L.latLngBounds(mappedPoints.map((point) => [point.latitude, point.longitude] as L.LatLngTuple))
+    : null, [mappedPoints]);
+
   useEffect(() => {
     if (!mapElement.current) return;
 
@@ -178,6 +183,13 @@ function FuelMap({ points, selectedMunicipalities, onSelectMunicipalities }: Fue
     clusters.addLayers(markers);
   }, [mappedPoints]);
 
+  // Enquadra o mapa nos municípios com dados (só quando não há município selecionado).
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !frameBounds || previousSelectionRef.current.length > 0) return;
+    map.fitBounds(frameBounds, { padding: [24, 24], maxZoom: 10, animate: false });
+  }, [frameBounds]);
+
   useEffect(() => {
     const selected = new Set(selectedMunicipalities.map(normalize));
     markerRef.current.forEach((marker, municipality) => {
@@ -200,17 +212,17 @@ function FuelMap({ points, selectedMunicipalities, onSelectMunicipalities }: Fue
       const bounds = L.latLngBounds(selectedPoints.map((point) => [point.latitude, point.longitude]));
       map.fitBounds(bounds, { padding: [36, 36], maxZoom: 8, animate: true });
     } else if (previousSelectionRef.current.length > 0 && selectedMunicipalities.length === 0) {
-      map.fitBounds(BRAZIL_BOUNDS, { padding: [12, 12], animate: true });
+      map.fitBounds(frameBounds ?? BRAZIL_BOUNDS, { padding: [24, 24], maxZoom: 10, animate: true });
     }
 
     previousSelectionRef.current = selectedMunicipalities;
-  }, [mappedPointsByName, selectedMunicipalities]);
+  }, [mappedPointsByName, selectedMunicipalities, frameBounds]);
 
   const unmappedCount = points.length - mappedPoints.length;
 
   return (
     <div className="fuel-map-shell">
-      <div className="fuel-map-canvas" ref={mapElement} aria-label="Mapa interativo do Brasil com verificações por município" />
+      <div className="fuel-map-canvas" ref={mapElement} aria-label="Mapa interativo com verificações por município" />
       <div className="fuel-map-legend">
         <span><i className="legend-low" /> Menos irregularidades</span>
         <span><i className="legend-medium" /> Atenção</span>

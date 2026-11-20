@@ -33,7 +33,7 @@
 .municipality-guide { position: relative; }
 .guide-button { display: flex; height: 38px; align-items: center; gap: 6px; padding: 0 9px; color: #4c5c50; background: #fff; border: 1px solid #dce1da; border-radius: 5px; cursor: pointer; font-size: 12px !important; white-space: nowrap; }
 .guide-button:hover, .sort-button:hover { background: #f1f5f0; }
-.municipality-popover { position: absolute; z-index: 10; top: calc(100% + 7px); right: 0; width: 270px; padding: 12px; background: #fff; border: 1px solid #dce1da; border-radius: 5px; box-shadow: 0 12px 28px rgba(33, 48, 37, .14); }
+.municipality-popover { position: absolute; z-index: 9999; top: calc(100% + 7px); right: 0; width: 270px; padding: 12px; background: #fff; border: 1px solid #dce1da; border-radius: 5px; box-shadow: 0 12px 28px rgba(33, 48, 37, .14); }
 .popover-heading { display: flex; align-items: center; justify-content: space-between; color: #354339; font-size: 12px; }
 .popover-heading span { color: #758077; font-size: 10px; }
 .municipality-popover > p { margin: 4px 0 9px; color: #7b847c; font-size: 10px; }
