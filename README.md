@@ -6,10 +6,10 @@
 <h3 align="center">API FATEC - Tratamento e Transparência de Dados Públicos de Bombas de Combustível (IPEM-SP)</h3>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/status-concluído-green?style=for-the-badge" alt="Status">
-  <img src="https://img.shields.io/badge/sprint%20atual-3-blue?style=for-the-badge" alt="Sprint atual">
-  <img src="https://img.shields.io/badge/metodologia-Scrum-yellow?style=for-the-badge" alt="Scrum">
-  <img src="https://img.shields.io/badge/Fatec-SJC-red?style=for-the-badge" alt="Fatec SJC">
+  <a><img src="https://img.shields.io/badge/status-concluído-green?style=for-the-badge" alt="Status"></a>
+  <a><img src="https://img.shields.io/badge/sprint%20atual-3-blue?style=for-the-badge" alt="Sprint atual"></a>
+  <a><img src="https://img.shields.io/badge/metodologia-Scrum-yellow?style=for-the-badge" alt="Scrum"></a>
+  <a><img src="https://img.shields.io/badge/Fatec-SJC-red?style=for-the-badge" alt="Fatec SJC"></a>
 </p>
 
 ---
@@ -100,8 +100,7 @@ O desafio envolve tratar, limpar e normalizar bases de dados heterogêneas (geog
 | 26 | Alta | Como usuário, quero poder utilizar diferentes filtros para obter dados mais precisos, com objetivo de tornar minha experiência no site mais interativa | 1 | ✅ |
 | 27 | Média | Como usuário, quero poder visualizar um KPI dinâmico, que se atualize conforme eu selecione determinados filtros, com objetivo de tornar o processo mais visual e prático | 4 | ✅ |
 | 28 | Baixa | Como usuário, quero poder visualizar facilmente a fonte dos dados apresentados na plataforma, para poder verificar a sua veracidade | 1 | ✅ |
-| 29 | Média | Como usuário, quero poder visualizar a distribuição dos resultados por município ou por região, para comparar as diferentes localidades | 1 | ✅ |
-| 30 | Baixa | Como usuário, quero poder acessar recursos de acessibilidade em Libras na plataforma web, para que pessoas com determinadas limitações físicas também possam acessar os dados, já que eles são de interesse público | 1 | ✅ |
+
 
 ---
 
@@ -133,11 +132,11 @@ Uma user story só é considerada concluída quando:
 ### Tecnologias usadas
 
 <p>
-  <img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python">
-  <img src="https://img.shields.io/badge/Google%20Colab-F9AB00?style=for-the-badge&logo=googlecolab&logoColor=white" alt="Google Colab">
-  <img src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript">
-  <img src="https://img.shields.io/badge/Git-F05032?style=for-the-badge&logo=git&logoColor=white" alt="Git">
-  <img src="https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white" alt="GitHub">
+  <a><img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python"></a>
+  <a><img src="https://img.shields.io/badge/Google%20Colab-F9AB00?style=for-the-badge&logo=googlecolab&logoColor=white" alt="Google Colab"></a>
+  <a><img src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript"></a>
+  <a><img src="https://img.shields.io/badge/Git-F05032?style=for-the-badge&logo=git&logoColor=white" alt="Git"></a>
+  <a><img src="https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white" alt="GitHub"></a>
 </p>
 
 | Tecnologia | Uso no projeto |
