@@ -90,18 +90,18 @@ O desafio envolve tratar, limpar e normalizar bases de dados heterogêneas (geog
 
 | Rank | Prioridade | User Story | Story Points | Status |
 |------|------------|------------|--------------|--------|
-| 19 | Alta | Como responsável do IPEM-SP, quero poder acessar os índices e dados obtidos em uma plataforma web, com o objetivo de deixar esses dados expostos de maneira prática, intuitiva, dinâmica e visual | 8 | ✅ |
-| 20 | Alta | Como usuário, quero poder visualizar o total de bombas fiscalizadas em um card de KPI, para compreender rapidamente o volume de fiscalizações realizadas | 2 | ✅ |
-| 21 | Alta | Como usuário, quero poder visualizar a porcentagem de bombas aprovadas em um card de KPI, para entender quantas bombas realmente estão em conformidade | 2 | ✅ |
-| 22 | Alta | Como usuário, quero poder visualizar o total de autuações em um card de KPI, para compreender rapidamente a quantidade de ocorrências efetuadas | 2 | ✅ |
-| 23 | Alta | Como usuário, quero poder visualizar a situação das bombas aferidas em um determinado município, com objetivo de entender facilmente a situação das bombas próximas a mim | 4 | ✅ |
-| 24 | Alta | Como usuário, quero poder visualizar a situação das bombas aferidas em uma determinada região, com objetivo de entender facilmente a situação das bombas próximas a mim | 2 | ✅ |
-| 25 | Alta | Como usuário, quero poder visualizar graficamente os filtros criados, com objetivo de tornar minha experiência no site mais interativa e prática | 2 | ✅ |
-| 26 | Alta | Como usuário, quero poder utilizar diferentes filtros para obter dados mais precisos, com objetivo de tornar minha experiência no site mais interativa | 2 | ✅ |
+| 19 | Alta | Como responsável do IPEM-SP, quero poder acessar os índices e dados obtidos em uma plataforma web, com o objetivo de deixar esses dados expostos de maneira prática, intuitiva, dinâmica e visual | 5 | ✅ |
+| 20 | Alta | Como usuário, quero poder visualizar o total de bombas fiscalizadas em um card de KPI, para compreender rapidamente o volume de fiscalizações realizadas | 3 | ✅ |
+| 21 | Alta | Como usuário, quero poder visualizar a porcentagem de bombas aprovadas em um card de KPI, para entender quantas bombas realmente estão em conformidade | 3 | ✅ |
+| 22 | Alta | Como usuário, quero poder visualizar o total de autuações em um card de KPI, para compreender rapidamente a quantidade de ocorrências efetuadas | 3 | ✅ |
+| 23 | Alta | Como usuário, quero poder visualizar a situação das bombas aferidas em um determinado município, com objetivo de entender facilmente a situação das bombas próximas a mim | 3 | ✅ |
+| 24 | Alta | Como usuário, quero poder visualizar a situação das bombas aferidas em uma determinada região, com objetivo de entender facilmente a situação das bombas próximas a mim | 1 | ✅ |
+| 25 | Alta | Como usuário, quero poder visualizar graficamente os filtros criados, com objetivo de tornar minha experiência no site mais interativa e prática | 1 | ✅ |
+| 26 | Alta | Como usuário, quero poder utilizar diferentes filtros para obter dados mais precisos, com objetivo de tornar minha experiência no site mais interativa | 1 | ✅ |
 | 27 | Média | Como usuário, quero poder visualizar um KPI dinâmico, que se atualize conforme eu selecione determinados filtros, com objetivo de tornar o processo mais visual e prático | 4 | ✅ |
 | 28 | Baixa | Como usuário, quero poder visualizar facilmente a fonte dos dados apresentados na plataforma, para poder verificar a sua veracidade | 1 | ✅ |
-| 29 | Média | Como usuário, quero poder visualizar a distribuição dos resultados por município ou por região, para comparar as diferentes localidades | 2 | ✅ |
-| 30 | Baixa | Como usuário, quero poder acessar recursos de acessibilidade em Libras na plataforma web, para que pessoas com determinadas limitações físicas também possam acessar os dados, já que eles são de interesse público | 2 | ✅ |
+| 29 | Média | Como usuário, quero poder visualizar a distribuição dos resultados por município ou por região, para comparar as diferentes localidades | 1 | ✅ |
+| 30 | Baixa | Como usuário, quero poder acessar recursos de acessibilidade em Libras na plataforma web, para que pessoas com determinadas limitações físicas também possam acessar os dados, já que eles são de interesse público | 1 | ✅ |
 
 ---
 
