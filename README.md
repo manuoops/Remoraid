@@ -56,7 +56,7 @@ O desafio envolve tratar, limpar e normalizar bases de dados heterogêneas (geog
 |--------|------|---------|--------|
 | 1 | Tratamento dos Dados | #1 a #9 | ✅ Concluída |
 | 2 | "Brincando" com dados (análise exploratória) | #10 a #18 | ✅ Concluída |
-| 3 | Aplicação visual, prática e didática | #19 a #30 | ⏰ Planejada |
+| 3 | Aplicação visual, prática e didática | #19 a #30 | ✅ Concluída |
 
 ### SPRINT 1 - Tratamento dos Dados ✅
 
@@ -86,24 +86,22 @@ O desafio envolve tratar, limpar e normalizar bases de dados heterogêneas (geog
 | 17 | Média | Como responsável do IPEM-SP, quero visualizar o número exato de bombas apuradas por município e por região, para compreender a abrangência das ações de fiscalização | 3 | ✅ |
 | 18 | Média | Como responsável do IPEM-SP, quero poder validar os indicadores apresentados, para que se mantenha um processo coerente com a base de dados fonte da pesquisa | 2 | ✅ |
 
-### SPRINT 3 - Aplicação visual, prática e didática ⏰
-
-> Sprint ainda não iniciada. Story Points serão definidos na Sprint Planning.
+### SPRINT 3 - Aplicação visual, prática e didática ✅
 
 | Rank | Prioridade | User Story | Story Points | Status |
 |------|------------|------------|--------------|--------|
-| 19 | Alta | Como responsável do IPEM-SP, quero poder acessar os índices e dados obtidos em uma plataforma web, com o objetivo de deixar esses dados expostos de maneira prática, intuitiva, dinâmica e visual | - | ⏰ |
-| 20 | Alta | Como usuário, quero poder visualizar o total de bombas fiscalizadas em um card de KPI, para compreender rapidamente o volume de fiscalizações realizadas | - | ⏰ |
-| 21 | Alta | Como usuário, quero poder visualizar a porcentagem de bombas aprovadas em um card de KPI, para entender quantas bombas realmente estão em conformidade | - | ⏰ |
-| 22 | Alta | Como usuário, quero poder visualizar o total de autuações em um card de KPI, para compreender rapidamente a quantidade de ocorrências efetuadas | - | ⏰ |
-| 23 | Alta | Como usuário, quero poder visualizar a situação das bombas aferidas em um determinado município, com objetivo de entender facilmente a situação das bombas próximas a mim | - | ⏰ |
-| 24 | Alta | Como usuário, quero poder visualizar a situação das bombas aferidas em uma determinada região, com objetivo de entender facilmente a situação das bombas próximas a mim | - | ⏰ |
-| 25 | Alta | Como usuário, quero poder visualizar graficamente os filtros criados, com objetivo de tornar minha experiência no site mais interativa e prática | - | ⏰ |
-| 26 | Alta | Como usuário, quero poder utilizar diferentes filtros para obter dados mais precisos, com objetivo de tornar minha experiência no site mais interativa | - | ⏰ |
-| 27 | Média | Como usuário, quero poder visualizar um KPI dinâmico, que se atualize conforme eu selecione determinados filtros, com objetivo de tornar o processo mais visual e prático | - | ⏰ |
-| 28 | Baixa | Como usuário, quero poder visualizar facilmente a fonte dos dados apresentados na plataforma, para poder verificar a sua veracidade | - | ⏰ |
-| 29 | Média | Como usuário, quero poder visualizar a distribuição dos resultados por município ou por região, para comparar as diferentes localidades | - | ⏰ |
-| 30 | Baixa | Como usuário, quero poder acessar recursos de acessibilidade em Libras na plataforma web, para que pessoas com determinadas limitações físicas também possam acessar os dados, já que eles são de interesse público | - | ⏰ |
+| 19 | Alta | Como responsável do IPEM-SP, quero poder acessar os índices e dados obtidos em uma plataforma web, com o objetivo de deixar esses dados expostos de maneira prática, intuitiva, dinâmica e visual | 8 | ✅ |
+| 20 | Alta | Como usuário, quero poder visualizar o total de bombas fiscalizadas em um card de KPI, para compreender rapidamente o volume de fiscalizações realizadas | 2 | ✅ |
+| 21 | Alta | Como usuário, quero poder visualizar a porcentagem de bombas aprovadas em um card de KPI, para entender quantas bombas realmente estão em conformidade | 2 | ✅ |
+| 22 | Alta | Como usuário, quero poder visualizar o total de autuações em um card de KPI, para compreender rapidamente a quantidade de ocorrências efetuadas | 2 | ✅ |
+| 23 | Alta | Como usuário, quero poder visualizar a situação das bombas aferidas em um determinado município, com objetivo de entender facilmente a situação das bombas próximas a mim | 4 | ✅ |
+| 24 | Alta | Como usuário, quero poder visualizar a situação das bombas aferidas em uma determinada região, com objetivo de entender facilmente a situação das bombas próximas a mim | 2 | ✅ |
+| 25 | Alta | Como usuário, quero poder visualizar graficamente os filtros criados, com objetivo de tornar minha experiência no site mais interativa e prática | 2 | ✅ |
+| 26 | Alta | Como usuário, quero poder utilizar diferentes filtros para obter dados mais precisos, com objetivo de tornar minha experiência no site mais interativa | 2 | ✅ |
+| 27 | Média | Como usuário, quero poder visualizar um KPI dinâmico, que se atualize conforme eu selecione determinados filtros, com objetivo de tornar o processo mais visual e prático | 4 | ✅ |
+| 28 | Baixa | Como usuário, quero poder visualizar facilmente a fonte dos dados apresentados na plataforma, para poder verificar a sua veracidade | 1 | ✅ |
+| 29 | Média | Como usuário, quero poder visualizar a distribuição dos resultados por município ou por região, para comparar as diferentes localidades | 2 | ✅ |
+| 30 | Baixa | Como usuário, quero poder acessar recursos de acessibilidade em Libras na plataforma web, para que pessoas com determinadas limitações físicas também possam acessar os dados, já que eles são de interesse público | 2 | ✅ |
 
 ---
 
@@ -403,7 +401,7 @@ npm -v</code></pre>
 
 #### 🖥️ Sprint 3 - Aplicação visual, prática e didática
 
-- **Status:** ⏰ Planejada
+- **Status:** ✅ Concluída
 - **Objetivo:** construir a aplicação web com filtros, cards de KPI e gráficos interativos.
 - **Entregas previstas:** dashboard funcional, manuais e documentação final (stories #19 a #30).
 
