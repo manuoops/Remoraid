@@ -6,9 +6,9 @@
 <h3 align="center">API FATEC - Tratamento e Transparência de Dados Públicos de Bombas de Combustível (IPEM-SP)</h3>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/status-em%20desenvolvimento-yellow?style=for-the-badge" alt="Status">
-  <img src="https://img.shields.io/badge/sprint%20atual-2-blue?style=for-the-badge" alt="Sprint atual">
-  <img src="https://img.shields.io/badge/metodologia-Scrum-green?style=for-the-badge" alt="Scrum">
+  <img src="https://img.shields.io/badge/status-concluído-green?style=for-the-badge" alt="Status">
+  <img src="https://img.shields.io/badge/sprint%20atual-3-blue?style=for-the-badge" alt="Sprint atual">
+  <img src="https://img.shields.io/badge/metodologia-Scrum-yellow?style=for-the-badge" alt="Scrum">
   <img src="https://img.shields.io/badge/Fatec-SJC-red?style=for-the-badge" alt="Fatec SJC">
 </p>
 
